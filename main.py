@@ -3,11 +3,26 @@ from google.cloud import texttospeech
 import PySimpleGUI as sg
 import os.path
 
-list = []
+sourceList = []
+targetList = []
 lang_code = ""
 # First the window layout in 2 columns
 output = r""
 file_list_column = [
+    [
+        sg.Text("Source Language:"), sg.Text("                                               Target Language:")
+    ],
+    [
+        sg.Listbox(values=["English", "Italian", "German", "Japanese"],
+                   enable_events=True,
+                   size=(40, 10),
+                   key="-SRC LANG-"),
+
+        sg.Listbox(values=["English", "Italian", "German", "Japanese"],
+                   enable_events=True,
+                   size=(40, 10),
+                   key="-TARGET LANG-")
+    ],
     [
         sg.Text("Enter the word and its translation in the boxes below.")
     ],
@@ -21,35 +36,25 @@ file_list_column = [
         sg.In(size=(25, 1), enable_events=True, key="-TARGET-"),
     ],
     [
-        sg.Listbox(
-            values=[], enable_events=True, size=(40, 20), key="-WORD LIST-"
-        )
+        sg.Button(key="-ADD-", auto_size_button=True, button_text="Add words"),
+
+        sg.Button("Go", enable_events=True, key="-GO-"),
+
     ],
+    # [
+    #     sg.Listbox(
+    #         values=[], enable_events=True, size=(40, 20), key="-WORD LIST-"
+    #     )
+    # ]
 ]
 
 # For now will only show the name of the file that was chosen
-language_viewer_column = [
-    [
-        sg.Text("Select a language from the list below:")
-    ],
-    [
-        sg.Listbox(values=["English", "Italian", "German", "Japanese"],
-                   enable_events=True,
-                   size=(40, 20),
-                   key="-LANG LIST-")
-    ],
-    [
-        sg.Button("Go", enable_events=True, key="-GO-"),
-    ]
 
-]
 
 # ----- Full layout -----
 layout = [
     [
-        sg.Column(file_list_column),
-        sg.VSeperator(),
-        sg.Column(language_viewer_column),
+        sg.Column(file_list_column)
     ]
 ]
 
@@ -61,30 +66,22 @@ while True:
     if event == "Exit" or event == sg.WIN_CLOSED:
         break
     # Word list file was chosen, display words in the file
-    if event == "-SOURCE-":
-        folder = values["-SOURCE-"]
-        try:
-            # Get list of words in file
-            file = open(folder, "r")
-            list = file.readlines()
-        except:
-            list = []
+    if event == "-ADD-" and values["-SOURCE-"] != "" and values["-TARGET-"] != "":
+        sourceWord = values["-SOURCE-"]
+        targetWord = values["-TARGET-"]
+        # Add source word to list
 
-        words = [
-            f
-            for f in list
-        ]
-        window["-WORD LIST-"].update(words)
-    elif event == '-TARGET-':
-        output = values['-TARGET-']
-        print(output)
-    elif event == "-LANG LIST-":  # A file was chosen from the listbox
-        try:
-            lang_code = values["-LANG LIST-"]
+        if sourceWord not in sourceList and targetWord not in targetList:
+            sourceList.append(sourceWord)
+            targetList.append(targetWord)
 
-        except:
-            pass
-    elif event == "-GO-":
+            # window["-WORD LIST-"].update([])
+            window['-WORD LIST-'].get_list_values()
+            window['-WORD LIST-'].update()
+
+    if event == "-TARGET LANG-":  # A file was chosen from the listbox
+        lang_code = values["-TARGET LANG-"]
+    if event == "-GO-":
         try:
             if lang_code == "" or output == r"":
                 sg.popup("Please select an output location and language.", title="Warning")
