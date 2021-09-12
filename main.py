@@ -5,50 +5,51 @@ import os.path
 
 sourceList = []
 targetList = []
-lang_code = ""
+targetLangCode = ""
+sourceLangCode = ""
 # First the window layout in 2 columns
 output = r""
 file_list_column = [
+    [
+        sg.Text("Output Location:"), sg.Input(key="-INPUT-"), sg.FolderBrowse(key="-OUTPUT-", enable_events=True)
+    ],
     [
         sg.Text("Source Language:"), sg.Text("                                               Target Language:")
     ],
     [
         sg.Listbox(values=["English", "Italian", "German", "Japanese"],
                    enable_events=True,
-                   size=(40, 10),
+                   size=(40, 4),
                    key="-SRC LANG-"),
 
         sg.Listbox(values=["English", "Italian", "German", "Japanese"],
                    enable_events=True,
-                   size=(40, 10),
+                   size=(40, 4),
                    key="-TARGET LANG-")
     ],
     [
-        sg.Text("Enter the word and its translation in the boxes below.")
+        sg.Text("Enter the word or phrase and its translation in the boxes below, then press add.")
     ],
     [
-        sg.Text("Source Language:"),
-        sg.In(size=(25, 1), enable_events=True, key="-SOURCE-"),
+        sg.Text("Source:"),
+        sg.In(size=(25, 1), enable_events=True, key="-SOURCE-")
     ],
 
     [
-        sg.Text("Target Language:"),
-        sg.In(size=(25, 1), enable_events=True, key="-TARGET-"),
+        sg.Text("Target:"),
+        sg.In(size=(25, 1), enable_events=True, key="-TARGET-")
     ],
     [
-        sg.Button(key="-ADD-", auto_size_button=True, button_text="Add words"),
-
-        sg.Button("Go", enable_events=True, key="-GO-"),
-
+        sg.Text("", key="-ERROR-")
     ],
-    # [
-    #     sg.Listbox(
-    #         values=[], enable_events=True, size=(40, 20), key="-WORD LIST-"
-    #     )
-    # ]
+    [
+        sg.Button(key="-ADD-", auto_size_button=True, button_text="Add"),
+
+        sg.Button("Build Deck", enable_events=True, key="-GO-"),
+
+    ]
 ]
 
-# For now will only show the name of the file that was chosen
 
 
 # ----- Full layout -----
@@ -58,7 +59,7 @@ layout = [
     ]
 ]
 
-window = sg.Window("Anki Language Deck Generator", layout)
+window = sg.Window("Anki Language Learning Deck Builder", layout)
 
 # Run the Event Loop
 while True:
@@ -71,19 +72,25 @@ while True:
         targetWord = values["-TARGET-"]
         # Add source word to list
 
-        if sourceWord not in sourceList and targetWord not in targetList:
+        if sourceWord not in sourceList and targetWord not in targetList and sourceWord != "" and targetWord != "":
             sourceList.append(sourceWord)
             targetList.append(targetWord)
+            window['-ERROR-'].update("Word/phrase pair added!")
+            window['-SOURCE-'].update("")
+            window['-TARGET-'].update("")
 
-            # window["-WORD LIST-"].update([])
-            window['-WORD LIST-'].get_list_values()
-            window['-WORD LIST-'].update()
+        else:
+            window['-ERROR-'].update("Please check your entries. Each word/phrase pair must be unique.")
 
     if event == "-TARGET LANG-":  # A file was chosen from the listbox
-        lang_code = values["-TARGET LANG-"]
+        targetLangCode = values["-TARGET LANG-"]
+    if event == "-SRC LANG-":
+        sourceLangCode = values["-SRC LANG-"]
+    if event == "-OUTPUT-":
+        output = values["-INPUT-"]
     if event == "-GO-":
         try:
-            if lang_code == "" or output == r"":
+            if targetLangCode == "" or output == r"":
                 sg.popup("Please select an output location and language.", title="Warning")
                 continue
             credential_path = "crucial-cycling-313504-148b7392f3ca.json"
@@ -92,7 +99,7 @@ while True:
             # Instantiates a client
 
             client = texttospeech.TextToSpeechClient()
-            lang = lang_code[0]
+            lang = targetLangCode[0]
             voice = texttospeech.VoiceSelectionParams()
             if lang == "English":
                 voice = texttospeech.VoiceSelectionParams(
