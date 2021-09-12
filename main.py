@@ -9,14 +9,16 @@ lang_code = ""
 output = r""
 file_list_column = [
     [
-        sg.Text("Word List File:"),
-        sg.In(size=(25, 1), enable_events=True, key="-FILE-"),
-        sg.FileBrowse(),
+        sg.Text("Enter the word and its translation in the boxes below.")
     ],
     [
-        sg.Text("Output Folder:"),
-        sg.In(size=(25, 1), enable_events=True, key="-FOLDER-"),
-        sg.FolderBrowse()
+        sg.Text("Source Language:"),
+        sg.In(size=(25, 1), enable_events=True, key="-SOURCE-"),
+    ],
+
+    [
+        sg.Text("Target Language:"),
+        sg.In(size=(25, 1), enable_events=True, key="-TARGET-"),
     ],
     [
         sg.Listbox(
@@ -40,7 +42,6 @@ language_viewer_column = [
         sg.Button("Go", enable_events=True, key="-GO-"),
     ]
 
-
 ]
 
 # ----- Full layout -----
@@ -52,7 +53,7 @@ layout = [
     ]
 ]
 
-window = sg.Window("Anki Audio Generator", layout)
+window = sg.Window("Anki Language Deck Generator", layout)
 
 # Run the Event Loop
 while True:
@@ -60,8 +61,8 @@ while True:
     if event == "Exit" or event == sg.WIN_CLOSED:
         break
     # Word list file was chosen, display words in the file
-    if event == "-FILE-":
-        folder = values["-FILE-"]
+    if event == "-SOURCE-":
+        folder = values["-SOURCE-"]
         try:
             # Get list of words in file
             file = open(folder, "r")
@@ -74,8 +75,8 @@ while True:
             for f in list
         ]
         window["-WORD LIST-"].update(words)
-    elif event == '-FOLDER-':
-        output = values['-FOLDER-']
+    elif event == '-TARGET-':
+        output = values['-TARGET-']
         print(output)
     elif event == "-LANG LIST-":  # A file was chosen from the listbox
         try:
@@ -85,8 +86,8 @@ while True:
             pass
     elif event == "-GO-":
         try:
-            if lang_code == "" or values["-FOLDER-"] == '' or output == r"":
-                sg.popup("Please select a .txt file, output location, and language.", title="Anki Audio Generator ")
+            if lang_code == "" or output == r"":
+                sg.popup("Please select an output location and language.", title="Warning")
                 continue
             credential_path = "crucial-cycling-313504-148b7392f3ca.json"
             os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credential_path
