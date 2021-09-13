@@ -86,9 +86,10 @@ while True:
         targetLangCode = values["-TARGET LANG-"]
     if event == "-SRC LANG-":
         sourceLangCode = values["-SRC LANG-"]
-    if event == "-OUTPUT-":
-        output = values["-INPUT-"]
     if event == "-GO-":
+        window.read()
+        output = window["-INPUT-"].get()
+        print(output)
         try:
             if targetLangCode == "" or output == r"":
                 sg.popup("Please select an output location and language.", title="Warning")
