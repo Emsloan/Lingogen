@@ -10,6 +10,12 @@ sourceLangCode = ""
 # First the window layout in 2 columns
 output = r""
 selection_column = [
+    [
+        sg.Text("Please select how you would like to enter your words.")
+    ],
+    [
+        sg.Button("Manual Entry", key="-MANUAL-"), sg.Button(".txt File Entry", key="-TEXT-")
+    ]
 
 ]
 file_entry_column = [
@@ -55,16 +61,15 @@ manual_entry_column = [
 
     ]
 ]
-
-
 def text():
-    while True:
-        layout = [
-            [
-                sg.Column(selection_column)
-            ]
+    layout = [
+        [
+            sg.Column(file_entry_column)
         ]
-        window = sg.Window("Anki Language Learning Deck Builder", layout)
+    ]
+    window = sg.Window("Anki Language Learning Deck Builder", layout)
+    while True:
+        event, values = window.read()
         break
 
 
@@ -80,29 +85,38 @@ def manual():
         event, values = window.read()
         if event == "Exit" or event == sg.WIN_CLOSED:
             break
-        # Word list file was chosen, display words in the file
+        # Word added to list, display words in window
         if event == "-ADD-" and values["-SOURCE-"] != "" and values["-TARGET-"] != "":
             sourceWord = values["-SOURCE-"]
             targetWord = values["-TARGET-"]
-            # Add source word to list
 
-            if sourceWord not in sourceList and targetWord not in targetList and sourceWord != "" and targetWord != "":
+            # check for uniqueness
+            if sourceWord not in sourceList and targetWord not in targetList:
+                # Add source and target words to list
                 sourceList.append(sourceWord)
                 targetList.append(targetWord)
                 window['-ERROR-'].update("Word/phrase pair added!")
                 window['-SOURCE-'].update("")
                 window['-TARGET-'].update("")
-
             else:
                 window['-ERROR-'].update("Please check your entries. Each word/phrase pair must be unique.")
 
-        if event == "-TARGET LANG-":  # A file was chosen from the listbox
+        if event == "-TARGET LANG-":  # A target language was chosen
             targetLangCode = values["-TARGET LANG-"]
-        if event == "-SRC LANG-":
+        if event == "-SRC LANG-":  # A source language was chosen
             sourceLangCode = values["-SRC LANG-"]
-        if event == "-GO-":
-            window.read()
+        if event == "-OUTPUT-":
             output = window["-INPUT-"].get()
+        if event == "-GO-":  # user chooses to generate deck
+            window.read()
+            if output == "" and targetLangCode != "":
+                sg.popup("Please select an output location.", title="Warning")
+            if output != "" and targetLangCode == "":
+                sg.popup("Please select a a target language.", title="Warning")
+            if output == "" and targetLangCode == "":
+                sg.popup("Please select an output location and a target language.", title="Warning")
+            else:
+                go()
 
 
 def go():
@@ -156,3 +170,24 @@ def go():
             # Write the response to the output file.
             out.write(response.audio_content)
     sg.popup("Audio Files Created", title="Anki Audio Generator ")
+
+layout = [
+    [
+        sg.Column(selection_column)
+    ]
+]
+window = sg.Window("Anki Language Learning Deck Builder", layout)
+
+while True:
+    event, values = window.read()
+    if event == "-MANUAL-":
+        manual()
+    if event == "-TEXT-":
+        text()
+    if event == "-EXIT-" or event == sg.WIN_CLOSED:
+        break
+window.close()
+
+
+
+
