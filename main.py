@@ -9,9 +9,10 @@ targetLangCode = ""
 sourceLangCode = ""
 # First the window layout in 2 columns
 output = r""
+text_file_location = r""
 selection_column = [
     [
-        sg.Text("Please select how you would like to enter your words.")
+        sg.Text("Please select how you would like to enter your words:")
     ],
     [
         sg.Button("Manual Entry", key="-MANUAL-"), sg.Button(".txt File Entry", key="-TEXT-")
@@ -19,6 +20,30 @@ selection_column = [
 
 ]
 file_entry_column = [
+    [
+        sg.Text("Text File Location:"), sg.Input(key="-TEXT_INPUT-"),
+        sg.FileBrowse(key="-TEXT_OUTPUT-", enable_events=True)
+    ],
+    [
+        sg.Text("Output Location:"), sg.Input(key="-INPUT-"), sg.FolderBrowse(key="-OUTPUT-", enable_events=True)
+    ],
+    [
+        sg.Text("Source Language:"), sg.Text("                                               Target Language:")
+    ],
+    [
+        sg.Listbox(values=["English", "Italian", "German", "Japanese"],
+                   enable_events=True,
+                   size=(40, 4),
+                   key="-SRC LANG-"),
+
+        sg.Listbox(values=["English", "Italian", "German", "Japanese"],
+                   enable_events=True,
+                   size=(40, 4),
+                   key="-TARGET LANG-")
+    ],
+    [
+        sg.Button("Build Deck", enable_events=True, key="-GO-"),
+    ]
 
 ]
 manual_entry_column = [
@@ -61,6 +86,8 @@ manual_entry_column = [
 
     ]
 ]
+
+
 def text():
     layout = [
         [
@@ -70,7 +97,29 @@ def text():
     window = sg.Window("Anki Language Learning Deck Builder", layout)
     while True:
         event, values = window.read()
-        break
+        if event == "Exit" or event == sg.WIN_CLOSED:
+            break
+        if event == "-TARGET LANG-":  # A target language was chosen
+            targetLangCode = values["-TARGET LANG-"]
+        if event == "-SRC LANG-":  # A source language was chosen
+            sourceLangCode = values["-SRC LANG-"]
+        if event == "-OUTPUT-":
+            output = window["-INPUT-"].get()
+        if event == "-TEXT_OUTPUT":
+            text_file_location = window["-TEXT_INPUT"].get()
+        if event == "-GO-":  # user chooses to generate deck
+            window.read()
+            if output == "" and targetLangCode != "":
+                sg.popup("Please select an output location.", title="Warning")
+            if output != "" and targetLangCode == "":
+                sg.popup("Please select a a target language.", title="Warning")
+            if output == "" and targetLangCode == "":
+                sg.popup("Please select an output location and a target language.", title="Warning")
+            else:
+                window.close()
+                sg.popup("Deck generated!", title="Success")
+                go()
+
 
 
 def manual():
@@ -171,6 +220,7 @@ def go():
             out.write(response.audio_content)
     sg.popup("Audio Files Created", title="Anki Audio Generator ")
 
+
 layout = [
     [
         sg.Column(selection_column)
@@ -181,13 +231,11 @@ window = sg.Window("Anki Language Learning Deck Builder", layout)
 while True:
     event, values = window.read()
     if event == "-MANUAL-":
+        window.close()
         manual()
     if event == "-TEXT-":
+        window.close()
         text()
     if event == "-EXIT-" or event == sg.WIN_CLOSED:
+        window.close()
         break
-window.close()
-
-
-
-
