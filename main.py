@@ -3,40 +3,52 @@ from google.cloud import texttospeech
 import PySimpleGUI as sg
 import os.path
 
+languageList =['English', 'Italian', 'German', 'Japanese'];
 sourceList = []
 targetList = []
+
+# target language that the card audio will be created in
 targetLangCode = ""
+# source language that the card
 sourceLangCode = ""
-# First the window layout in 2 columns
+
+# output location
 output = r""
+
+# input location if input from .txt. file choesen
 text_file_location = r""
+
+
+# Initial window selecting input method
 selection_column = [
     [
-        sg.Text("Please select how you would like to enter your words:")
+        sg.Text("Please select input method:")
     ],
     [
-        sg.Button("Manual Entry", key="-MANUAL-"), sg.Button(".txt File Entry", key="-TEXT-")
+        sg.Button("Manual Entry", key="-MANUAL-"), sg.Button(".txt File", key="-TEXT-")
     ]
 
 ]
+
+#
 file_entry_column = [
     [
-        sg.Text("Text File Location:"), sg.Input(key="-TEXT_INPUT-"),
+        sg.Text("Please select a .txt file:"), sg.Input(key="-TEXT_INPUT-"),
         sg.FileBrowse(key="-TEXT_OUTPUT-", enable_events=True)
     ],
     [
-        sg.Text("Output Location:"), sg.Input(key="-INPUT-"), sg.FolderBrowse(key="-OUTPUT-", enable_events=True)
+        sg.Text("Please select an output folder:"), sg.Input(key="-INPUT-"), sg.FolderBrowse(key="-OUTPUT-", enable_events=True)
     ],
     [
-        sg.Text("Source Language:"), sg.Text("                                               Target Language:")
+        sg.Text("Please select the source and target language:")
     ],
     [
-        sg.Listbox(values=["English", "Italian", "German", "Japanese"],
+        sg.Combo(languageList,
                    enable_events=True,
                    size=(40, 4),
                    key="-SRC LANG-"),
 
-        sg.Listbox(values=["English", "Italian", "German", "Japanese"],
+        sg.Combo(['English', 'Italian', 'German', 'Japanese'],
                    enable_events=True,
                    size=(40, 4),
                    key="-TARGET LANG-")
