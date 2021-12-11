@@ -1,12 +1,31 @@
 # img_viewer.py
 from google.cloud import texttospeech
-import PySimpleGUI as sg
+import PySimpleGUI as simpleGUI
 import os.path
 
-languageList = ['English', 'Italian', 'German', 'Japanese'];
+languageList = ['English', 'Italian', 'German', 'Japanese']
 sourceList = []
 targetList = []
 
+output_element = [simpleGUI.Text("Please select an output folder:"), simpleGUI.Input(key="-OUTPUT_FIELD-"), simpleGUI.FolderBrowse(
+    key="-OUTPUT-", enable_events=True)]
+languageSelectors = [
+        simpleGUI.Combo(languageList,
+                        enable_events=True,
+                        size=(40, 4),
+                        key="-SRC LANG-"),
+
+        simpleGUI.Combo(languageList,
+                        enable_events=True,
+                        size=(40, 4),
+                        key="-TARGET LANG-")
+    ]
+languagePrompt = [
+        simpleGUI.Text("Please select the source and target language:")
+    ]
+buildButton = [
+        simpleGUI.Button("Build Deck", enable_events=True, key="-GO-"),
+    ]
 # target language that the card audio will be created in
 global targetLangCode
 # source language that the card
@@ -21,109 +40,95 @@ text_file_location = r""
 # Initial window selecting input method
 selection_column = [
     [
-        sg.Text("Please select input method:")
+        simpleGUI.Text("Please select input method:")
     ],
     [
-        sg.Button("Manual Entry", key="-MANUAL-"), sg.Button(".txt File", key="-TEXT-")
-    ]
+        simpleGUI.Radio('Text Entry', "RADIO1", default=True, key="-MANUAL-"),
+        simpleGUI.Radio('File Upload', "RADIO1", key="-TEXT-"),
 
+    ],
+    [
+        simpleGUI.Button('Confirm', key="-CONFIRM-", enable_events=True)
+    ]
 ]
 
 #
 file_entry_column = [
+    output_element
+    ,
     [
-        sg.Text("Please select a .txt file:"), sg.Input(key="-TEXT_INPUT-"),
-        sg.FileBrowse(key="-TEXT_OUTPUT-", enable_events=True)
+        simpleGUI.Text("Please select a .txt file:"), simpleGUI.Input(key="-FILE_INPUT-"),
+        simpleGUI.FileBrowse(key="-TEXT_OUTPUT-", enable_events=True)
     ],
-    [
-        sg.Text("Please select an output folder:"), sg.Input(key="-INPUT-"),
-        sg.FolderBrowse(key="-OUTPUT-", enable_events=True)
-    ],
-    [
-        sg.Text("Please select the source and target language:")
-    ],
-    [
-        sg.Combo(languageList,
-                 enable_events=True,
-                 size=(40, 4),
-                 key="-SRC LANG-"),
-
-        sg.Combo(['English', 'Italian', 'German', 'Japanese'],
-                 enable_events=True,
-                 size=(40, 4),
-                 key="-TARGET LANG-")
-    ],
-    [
-        sg.Button("Build Deck", enable_events=True, key="-GO-"),
-    ]
-
+    languagePrompt,
+    languageSelectors,
+    buildButton,
 ]
 manual_entry_column = [
+    output_element,
     [
-        sg.Text("Output Location:"), sg.Input(key="-INPUT-"), sg.FolderBrowse(key="-OUTPUT-", enable_events=True)
+        simpleGUI.InputText(key='')
     ],
+    languageSelectors,
     [
-        sg.Text("Source Language:"), sg.Text("                                               Target Language:")
-    ],
-    [
-        sg.Combo(values=[languageList],
-                 enable_events=True,
-                 size=(40, 4),
-                 key="-SRC LANG-"),
+        simpleGUI.Combo(values=[languageList],
+                        enable_events=True,
+                        size=(40, 4),
+                        key="-SRC LANG-"),
 
-        sg.Combo(values=[languageList],
-                 enable_events=True,
-                 size=(40, 4),
-                 key="-TARGET LANG-")
+        simpleGUI.Combo(values=[languageList],
+                        enable_events=True,
+                        size=(40, 4),
+                        key="-TARGET LANG-")
     ],
     [
-        sg.Text("Enter the word or phrase and its translation in the boxes below, then press add.")
+        simpleGUI.Text("Enter the word or phrase and its translation in the boxes below, then press add.")
     ],
     [
-        sg.Text("Source:"),
-        sg.In(size=(25, 1), enable_events=True, key="-SOURCE-")
+        simpleGUI.Text("Source:"),
+        simpleGUI.In(size=(25, 1), enable_events=True, key="-SOURCE-")
     ],
 
     [
-        sg.Text("Target:"),
-        sg.In(size=(25, 1), enable_events=True, key="-TARGET-")
+        simpleGUI.Text("Target:"),
+        simpleGUI.In(size=(25, 1), enable_events=True, key="-TARGET-")
     ],
     [
-        sg.Text("", key="-ERROR-")
+        simpleGUI.Text("", key="-ERROR-")
     ],
     [
-        sg.Button(key="-ADD-", auto_size_button=True, button_text="Add"),
+        simpleGUI.Button(key="-ADD-", auto_size_button=True, button_text="Add"),
 
-        sg.Button("Build Deck", enable_events=True, key="-GO-"),
+        simpleGUI.Button("Build Deck", enable_events=True, key="-GO-"),
 
     ]
 ]
 
 
-def text():
+def main():
     layout = [
         [
-            sg.Column(file_entry_column)
+            simpleGUI.Column(file_entry_column)
         ]
     ]
-    window = sg.Window("Anki Language Learning Deck Builder", layout)
+    window = simpleGUI.Window("Anki Language Learning Deck Builder", layout)
     while True:
         event, values = window.read()
-        if event == "Exit" or event == sg.WIN_CLOSED:
+        if event == "Exit" or event == simpleGUI.WIN_CLOSED:
             break
         if event == "-TARGET LANG-":  # A target language was chosen
             targetLangCode = values["-TARGET LANG-"]
         if event == "-SRC LANG-":  # A source language was chosen
             sourceLangCode = values["-SRC LANG-"]
         if event == "-OUTPUT-":
-            output = window["-INPUT-"].get()
+            output = window["OUTPUT_FIELD"].get()
         if event == "-TEXT_OUTPUT":
-            text_file_location = window["-TEXT_INPUT"].get()
+            text_file_location = window["-FILE_INPUT"].get()
         if event == "-GO-":  # user chooses to generate deck
             window.read()
             if output != "" and targetLangCode != "" and sourceLangCode != "":
                 window.close()
-                sg.popup("Deck generated!", title="Success")
+                simpleGUI.popup("Deck generated!", title="Success")
                 generate()
             else:
                 error()
@@ -137,13 +142,13 @@ def error():
         error += "\n - Select a target language."
     if sourceLangCode == "":
         error += "\n - Select a source language."
-    sg.popup(error, title="Warning")
+    simpleGUI.popup(error, title="Warning")
 
 
 def generate():
     print(output)
     if targetLangCode == "" or output == r"":
-        sg.popup("Please select an output location and language.", title="Warning")
+        simpleGUI.popup("Please select an output location and language.", title="Warning")
         return
     credential_path = "crucial-cycling-313504-148b7392f3ca.json"
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credential_path
@@ -190,15 +195,15 @@ def generate():
         with open(completeName, 'wb') as out:
             # Write the response to the output file.
             out.write(response.audio_content)
-    sg.popup("Audio Files Created", title="Anki Audio Generator ")
+    simpleGUI.popup("Audio Files Created", title="Anki Audio Generator ")
 
 
 layout = [
     [
-        sg.Column(selection_column)
+        simpleGUI.Column(selection_column)
     ]
 ]
-window = sg.Window("Anki Language Learning Deck Builder", layout)
+window = simpleGUI.Window("Anki Language Learning Deck Builder", layout)
 
 while True:
     event, values = window.read()
@@ -207,10 +212,10 @@ while True:
         window.close()
         manual()
     """
-    if event == "-TEXT-":
+    if event == "-CONFIRM-":
         window.close()
-        text()
-    if event == "-EXIT-" or event == sg.WIN_CLOSED:
+        main()
+    if event == "-EXIT-" or event == simpleGUI.WIN_CLOSED:
         window.close()
         break
 
