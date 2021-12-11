@@ -3,21 +3,20 @@ from google.cloud import texttospeech
 import PySimpleGUI as sg
 import os.path
 
-languageList =['English', 'Italian', 'German', 'Japanese'];
+languageList = ['English', 'Italian', 'German', 'Japanese'];
 sourceList = []
 targetList = []
 
 # target language that the card audio will be created in
-targetLangCode = ""
+global targetLangCode
 # source language that the card
-sourceLangCode = ""
+global sourceLangCode
 
 # output location
 output = r""
 
 # input location if input from .txt. file choesen
 text_file_location = r""
-
 
 # Initial window selecting input method
 selection_column = [
@@ -37,21 +36,22 @@ file_entry_column = [
         sg.FileBrowse(key="-TEXT_OUTPUT-", enable_events=True)
     ],
     [
-        sg.Text("Please select an output folder:"), sg.Input(key="-INPUT-"), sg.FolderBrowse(key="-OUTPUT-", enable_events=True)
+        sg.Text("Please select an output folder:"), sg.Input(key="-INPUT-"),
+        sg.FolderBrowse(key="-OUTPUT-", enable_events=True)
     ],
     [
         sg.Text("Please select the source and target language:")
     ],
     [
         sg.Combo(languageList,
-                   enable_events=True,
-                   size=(40, 4),
-                   key="-SRC LANG-"),
+                 enable_events=True,
+                 size=(40, 4),
+                 key="-SRC LANG-"),
 
         sg.Combo(['English', 'Italian', 'German', 'Japanese'],
-                   enable_events=True,
-                   size=(40, 4),
-                   key="-TARGET LANG-")
+                 enable_events=True,
+                 size=(40, 4),
+                 key="-TARGET LANG-")
     ],
     [
         sg.Button("Build Deck", enable_events=True, key="-GO-"),
@@ -66,15 +66,15 @@ manual_entry_column = [
         sg.Text("Source Language:"), sg.Text("                                               Target Language:")
     ],
     [
-        sg.Listbox(values=["English", "Italian", "German", "Japanese"],
-                   enable_events=True,
-                   size=(40, 4),
-                   key="-SRC LANG-"),
+        sg.Combo(values=[languageList],
+                 enable_events=True,
+                 size=(40, 4),
+                 key="-SRC LANG-"),
 
-        sg.Listbox(values=["English", "Italian", "German", "Japanese"],
-                   enable_events=True,
-                   size=(40, 4),
-                   key="-TARGET LANG-")
+        sg.Combo(values=[languageList],
+                 enable_events=True,
+                 size=(40, 4),
+                 key="-TARGET LANG-")
     ],
     [
         sg.Text("Enter the word or phrase and its translation in the boxes below, then press add.")
@@ -121,66 +121,26 @@ def text():
             text_file_location = window["-TEXT_INPUT"].get()
         if event == "-GO-":  # user chooses to generate deck
             window.read()
-            if output == "" and targetLangCode != "":
-                sg.popup("Please select an output location.", title="Warning")
-            if output != "" and targetLangCode == "":
-                sg.popup("Please select a a target language.", title="Warning")
-            if output == "" and targetLangCode == "":
-                sg.popup("Please select an output location and a target language.", title="Warning")
-            else:
+            if output != "" and targetLangCode != "" and sourceLangCode != "":
                 window.close()
                 sg.popup("Deck generated!", title="Success")
-                go()
-
-
-
-def manual():
-    layout = [
-        [
-            sg.Column(manual_entry_column)
-        ]
-    ]
-    window = sg.Window("Anki Language Learning Deck Builder", layout)
-    # Run the Event Loop
-    while True:
-        event, values = window.read()
-        if event == "Exit" or event == sg.WIN_CLOSED:
-            break
-        # Word added to list, display words in window
-        if event == "-ADD-" and values["-SOURCE-"] != "" and values["-TARGET-"] != "":
-            sourceWord = values["-SOURCE-"]
-            targetWord = values["-TARGET-"]
-
-            # check for uniqueness
-            if sourceWord not in sourceList and targetWord not in targetList:
-                # Add source and target words to list
-                sourceList.append(sourceWord)
-                targetList.append(targetWord)
-                window['-ERROR-'].update("Word/phrase pair added!")
-                window['-SOURCE-'].update("")
-                window['-TARGET-'].update("")
+                generate()
             else:
-                window['-ERROR-'].update("Please check your entries. Each word/phrase pair must be unique.")
-
-        if event == "-TARGET LANG-":  # A target language was chosen
-            targetLangCode = values["-TARGET LANG-"]
-        if event == "-SRC LANG-":  # A source language was chosen
-            sourceLangCode = values["-SRC LANG-"]
-        if event == "-OUTPUT-":
-            output = window["-INPUT-"].get()
-        if event == "-GO-":  # user chooses to generate deck
-            window.read()
-            if output == "" and targetLangCode != "":
-                sg.popup("Please select an output location.", title="Warning")
-            if output != "" and targetLangCode == "":
-                sg.popup("Please select a a target language.", title="Warning")
-            if output == "" and targetLangCode == "":
-                sg.popup("Please select an output location and a target language.", title="Warning")
-            else:
-                go()
+                error()
 
 
-def go():
+def error():
+    error = "Please fix the following issues before continuing:"
+    if output == "":
+        error += "\n - Output location empty."
+    if targetLangCode == "":
+        error += "\n - Select a target language."
+    if sourceLangCode == "":
+        error += "\n - Select a source language."
+    sg.popup(error, title="Warning")
+
+
+def generate():
     print(output)
     if targetLangCode == "" or output == r"":
         sg.popup("Please select an output location and language.", title="Warning")
@@ -242,12 +202,61 @@ window = sg.Window("Anki Language Learning Deck Builder", layout)
 
 while True:
     event, values = window.read()
+    """
     if event == "-MANUAL-":
         window.close()
         manual()
+    """
     if event == "-TEXT-":
         window.close()
         text()
     if event == "-EXIT-" or event == sg.WIN_CLOSED:
         window.close()
         break
+
+"""
+def manual():
+    layout = [
+        [
+            sg.Column(manual_entry_column)
+        ]
+    ]
+    window = sg.Window("Anki Language Learning Deck Builder", layout)
+    # Run the Event Loop
+    while True:
+        event, values = window.read()
+        if event == "Exit" or event == sg.WIN_CLOSED:
+            break
+        # Word added to list, display words in window
+        if event == "-ADD-" and values["-SOURCE-"] != "" and values["-TARGET-"] != "":
+            sourceWord = values["-SOURCE-"]
+            targetWord = values["-TARGET-"]
+
+            # check for uniqueness
+            if sourceWord not in sourceList and targetWord not in targetList:
+                # Add source and target words to list
+                sourceList.append(sourceWord)
+                targetList.append(targetWord)
+                window['-ERROR-'].update("Word/phrase pair added!")
+                window['-SOURCE-'].update("")
+                window['-TARGET-'].update("")
+            else:
+                window['-ERROR-'].update("Please check your entries. Each word/phrase pair must be unique.")
+
+        if event == "-TARGET LANG-":  # A target language was chosen
+            targetLangCode = values["-TARGET LANG-"]
+        if event == "-SRC LANG-":  # A source language was chosen
+            sourceLangCode = values["-SRC LANG-"]
+        if event == "-OUTPUT-":
+            output = window["-INPUT-"].get()
+        if event == "-GO-":  # user chooses to generate deck
+            window.read()
+            if output == "" and targetLangCode != "":
+                sg.popup("Please select an output location.", title="Warning")
+            if output != "" and targetLangCode == "":
+                sg.popup("Please select a a target language.", title="Warning")
+            if output == "" and targetLangCode == "":
+                sg.popup("Please select an output location and a target language.", title="Warning")
+            else:
+                go()
+"""
