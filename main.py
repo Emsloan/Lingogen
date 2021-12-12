@@ -6,7 +6,7 @@ import os.path
 languageList = ['English', 'Italian', 'German', 'Japanese']
 sourceList = []
 targetList = []
-input_type = "file"
+input_type = None
 # output = None
 output_element = [simpleGUI.Text("Please select an output folder:"), simpleGUI.Input(key="-OUTPUT_FIELD-"), simpleGUI.FolderBrowse(
     key="-OUTPUT-", enable_events=True)]
@@ -35,8 +35,8 @@ selection_column = [
         simpleGUI.Text("Please select input method:")
     ],
     [
-        simpleGUI.Radio('Text Entry', "RADIO1", default=True, key="-FILE-"),
-        simpleGUI.Radio('File Upload', "RADIO1", key="-TEXT-"),
+        simpleGUI.Radio('File Upload', "RADIO1", default=True, key="-FILE-"),
+        simpleGUI.Radio('Text Entry', "RADIO1", key="-TEXT-"),
 
     ],
     [
@@ -59,20 +59,9 @@ file_entry_column = [
 text_entry_column = [
     output_element,
     [
-        simpleGUI.InputText(key='')
+        simpleGUI.InputText(key='-TEXT_INPUT')
     ],
     languageSelectors,
-    [
-        simpleGUI.Combo(values=[languageList],
-                        enable_events=True,
-                        size=(40, 4),
-                        key="-SRC LANG-"),
-
-        simpleGUI.Combo(values=[languageList],
-                        enable_events=True,
-                        size=(40, 4),
-                        key="-TARGET LANG-")
-    ],
     [
         simpleGUI.Text("Enter the word or phrase and its translation in the boxes below, then press add.")
     ],
@@ -223,9 +212,9 @@ while True:
         window.close()
         manual()
     """
-    if event == "-FILE-":
+    if values['-FILE-']:
         input_type = "file"
-    if event == "-TEXT-":
+    if values['-TEXT-']:
         input_type = "text"
     if event == "-CONFIRM-":
         window.close()
