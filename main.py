@@ -6,7 +6,8 @@ import os.path
 languageList = ['English', 'Italian', 'German', 'Japanese']
 sourceList = []
 targetList = []
-
+input_type = "file"
+# output = None
 output_element = [simpleGUI.Text("Please select an output folder:"), simpleGUI.Input(key="-OUTPUT_FIELD-"), simpleGUI.FolderBrowse(
     key="-OUTPUT-", enable_events=True)]
 languageSelectors = [
@@ -26,16 +27,7 @@ languagePrompt = [
 buildButton = [
         simpleGUI.Button("Build Deck", enable_events=True, key="-GO-"),
     ]
-# target language that the card audio will be created in
-global targetLangCode
-# source language that the card
-global sourceLangCode
 
-# output location
-output = r""
-
-# input location if input from .txt. file choesen
-text_file_location = r""
 
 # Initial window selecting input method
 selection_column = [
@@ -43,7 +35,7 @@ selection_column = [
         simpleGUI.Text("Please select input method:")
     ],
     [
-        simpleGUI.Radio('Text Entry', "RADIO1", default=True, key="-MANUAL-"),
+        simpleGUI.Radio('Text Entry', "RADIO1", default=True, key="-FILE-"),
         simpleGUI.Radio('File Upload', "RADIO1", key="-TEXT-"),
 
     ],
@@ -64,7 +56,7 @@ file_entry_column = [
     languageSelectors,
     buildButton,
 ]
-manual_entry_column = [
+text_entry_column = [
     output_element,
     [
         simpleGUI.InputText(key='')
@@ -106,11 +98,29 @@ manual_entry_column = [
 
 
 def main():
-    layout = [
-        [
-            simpleGUI.Column(file_entry_column)
+    global output
+    # target language that the card audio will be created in
+    global targetLangCode
+    # source language that the card
+    global sourceLangCode
+
+    # output location
+
+    # input location if input from .txt. file chosen
+    text_file_location = r""
+
+    if(input_type == "file"):
+        layout = [
+            [
+                simpleGUI.Column(file_entry_column)
+            ]
         ]
-    ]
+    else:
+        layout = [
+            [
+                simpleGUI.Column(text_entry_column)
+            ]
+        ]
     window = simpleGUI.Window("Anki Language Learning Deck Builder", layout)
     while True:
         event, values = window.read()
@@ -120,13 +130,13 @@ def main():
             targetLangCode = values["-TARGET LANG-"]
         if event == "-SRC LANG-":  # A source language was chosen
             sourceLangCode = values["-SRC LANG-"]
-        if event == "-OUTPUT-":
+        if event == "-OUTPUT-": # An output folder was selected
             output = window["OUTPUT_FIELD"].get()
         if event == "-TEXT_OUTPUT":
             text_file_location = window["-FILE_INPUT"].get()
         if event == "-GO-":  # user chooses to generate deck
             window.read()
-            if output != "" and targetLangCode != "" and sourceLangCode != "":
+            if output is None and targetLangCode is None and sourceLangCode is None:
                 window.close()
                 simpleGUI.popup("Deck generated!", title="Success")
                 generate()
@@ -205,6 +215,7 @@ layout = [
 ]
 window = simpleGUI.Window("Anki Language Learning Deck Builder", layout)
 
+
 while True:
     event, values = window.read()
     """
@@ -212,6 +223,10 @@ while True:
         window.close()
         manual()
     """
+    if event == "-FILE-":
+        input_type = "file"
+    if event == "-TEXT-":
+        input_type = "text"
     if event == "-CONFIRM-":
         window.close()
         main()
