@@ -7,10 +7,33 @@ languageList = ['English', 'Italian', 'German', 'Japanese']
 sourceList = []
 targetList = []
 input_type = None
+
+key_output_folder = "-OUTPUT-"
+key_output_field = "-OUTPUT_FIELD-"
+key_source_lang = "-SRC LANG-"
+key_target_lang = "-TARGET_LANG-"
+key_go = "-GO-"
+key_file = "-FILE-"
+key_text = "-TEXT-"
+key_confirm = "-CONFIRM-"
+key_src_file_field = "-SRC_FILE_INPUT-"
+key_target_file_field = "-TARGET_FILE_INPUT-"
+key_src_file_folder = "-SRC_FILE-"
+key_target_file_folder = "-TARGET_FILE-"
+key_src_txt_input = '-SRC_INPUT-'
+key_target_txt_input = '-TARGET_INPUT-'
+key_add = "-ADD-"
+key_exit = "-EXIT-"
+
 # output = None
-output_element = [simpleGUI.Text("Please select an output folder:"), simpleGUI.Input(key="-OUTPUT_FIELD-"),
+global output_location
+# input location if input from .txt. file chosen
+global src_file_location
+global target_file_location
+
+output_element = [simpleGUI.Text("Please select an output folder:"), simpleGUI.Input(key=key_output_field),
                   simpleGUI.FolderBrowse(
-                      key="-OUTPUT-", enable_events=True)]
+                      key=key_output_folder, enable_events=True)]
 languagePrompt = [
     simpleGUI.Text("Please select the languages:")
 ]
@@ -19,15 +42,15 @@ languageSelectors = [
     simpleGUI.Combo(languageList,
                     enable_events=True,
                     size=(40, 4),
-                    key="-SRC LANG-"),
+                    key=key_source_lang),
     simpleGUI.Text("Target language:"),
     simpleGUI.Combo(languageList,
                     enable_events=True,
                     size=(40, 4),
-                    key="-TARGET_LANG-")
+                    key=key_target_lang)
 ]
 buildButton = [
-    simpleGUI.Button("Build Deck", enable_events=True, key="-GO-"),
+    simpleGUI.Button("Build Deck", enable_events=True, key=key_go),
 ]
 
 # Initial window selecting input method
@@ -36,12 +59,12 @@ selection_column = [
         simpleGUI.Text("Please select input method:")
     ],
     [
-        simpleGUI.Radio('File Upload', "RADIO1", default=True, key="-FILE-"),
-        simpleGUI.Radio('Text Entry', "RADIO1", key="-TEXT-"),
+        simpleGUI.Radio('File Upload', "RADIO1", default=True, key=key_file),
+        simpleGUI.Radio('Text Entry', "RADIO1", key=key_text),
 
     ],
     [
-        simpleGUI.Button('Confirm', key="-CONFIRM-", enable_events=True)
+        simpleGUI.Button('Confirm', key=key_confirm, enable_events=True)
     ]
 ]
 
@@ -51,13 +74,15 @@ file_entry_column = [
     ,
     # choose file with source language words
     [
-        simpleGUI.Input(key="-SRC_FILE_INPUT-"),
-        simpleGUI.FileBrowse(key="-SRC_FILE-", enable_events=True)
+        simpleGUI.Text("Please .txt file in source language:"),
+        simpleGUI.Input(key=key_src_file_field),
+        simpleGUI.FileBrowse(key=key_src_file_folder, enable_events=True)
     ],
     # choose file with target language words
     [
-        simpleGUI.Input(key="-TARGET_FILE_INPUT-"),
-        simpleGUI.FileBrowse(key="-TARGET_FILE-", enable_events=True)
+        simpleGUI.Text("Please .txt file in target language:"),
+        simpleGUI.Input(key=key_target_file_field),
+        simpleGUI.FileBrowse(key=key_target_file_folder, enable_events=True)
     ],
     languagePrompt,
     languageSelectors,
@@ -73,28 +98,22 @@ text_entry_column = [
         simpleGUI.Text("Enter each word or phrase and its translation in the boxes below, then press 'add'.")
     ],
     [
-        simpleGUI.Text("Source: "), simpleGUI.InputText(default_text="", key='-SRC_INPUT-', do_not_clear = False),
-        simpleGUI.Text("Target: "), simpleGUI.InputText(default_text="", key='-TARGET_INPUT-', do_not_clear = False)
+        simpleGUI.Text("Source: "), simpleGUI.InputText(default_text="", key=key_src_txt_input, do_not_clear=False),
+        simpleGUI.Text("Target: "), simpleGUI.InputText(default_text="", key=key_target_txt_input, do_not_clear=False)
     ],
     [
-        simpleGUI.Button(key="-ADD-", auto_size_button=True, button_text="Add")
+        simpleGUI.Button(key=key_add, auto_size_button=True, button_text="Add")
     ],
     buildButton
 ]
 
 
 def main():
-    global output
+    global output_location
     # target language that the card audio will be created in
     global targetLangCode
     # source language that the card
     global sourceLangCode
-
-    # output location
-
-    # input location if input from .txt. file chosen
-    src_file_location = r""
-    target_file_location = r""
 
     if (input_type == "file"):
         layout = [
@@ -113,46 +132,55 @@ def main():
         event, values = window.read()
         if event == "Exit" or event == simpleGUI.WIN_CLOSED:
             break
-        if event == "-TARGET_LANG-":  # A target language was chosen
-            targetLangCode = values["-TARGET_LANG-"]
-        if event == "-SRC LANG-":  # A source language was chosen
-            sourceLangCode = values["-SRC LANG-"]
-        if event == "-OUTPUT-":  # An output folder was selected
-            output = window["-OUTPUT_FIELD-"].get()
-        if event == "-SRC_FILE-":
-            src_file_location = window["-SRC_FILE_INPUT-"].get()
-        if event == "-TARGET_FILE-":
-            target_file_location = window["-TARGET_FILE_INPUT-"].get()
-        if event == "-ADD-":
-            if values['-SRC_INPUT-'] != "" and values['-TARGET_INPUT-'] != "":
-                sourceList.append(values['-SRC_INPUT-'])
-                targetList.append(values['-TARGET_INPUT-'])
+        if event == key_target_lang:  # A target language was chosen
+            targetLangCode = values[key_target_lang]
+        if event == key_source_lang:  # A source language was chosen
+            sourceLangCode = values[key_source_lang]
+        if event == key_output_folder:  # An output folder was selected
+            output_location = window[key_output_field].get()
+        if event == key_src_file_folder:
+            src_file_location = window[key_src_file_field].get()
+        if event == key_target_file_folder:
+            target_file_location = window[key_target_file_field].get()
+        if event == key_add:
+            if values[key_src_txt_input] != "" and values[key_target_txt_input] != "":
+                sourceList.append(values[key_src_txt_input])
+                targetList.append(values[key_target_txt_input])
             else:
                 simpleGUI.popup("Please add a word to both boxes.")
-        if event == "-GO-":  # user chooses to generate deck
+        if event == key_go:  # user chooses to generate deck
             window.read()
-            if output is None and targetLangCode is None and sourceLangCode is None:
+            is_error()
                 window.close()
                 simpleGUI.popup("Deck generated!", title="Success")
                 generate()
             else:
-                error()
+                is_error()
 
 
-def error():
+def  is_error():
     error = "Please fix the following issues before continuing:"
-    if output == "":
-        error += "\n - Output location empty."
-    if targetLangCode == "":
+    if output_location is None:
+        error += "\n - Select an output location."
+    if targetLangCode is None:
         error += "\n - Select a target language."
-    if sourceLangCode == "":
+    if sourceLangCode is None:
         error += "\n - Select a source language."
-    simpleGUI.popup(error, title="Warning")
+    if(input_type == "file"):
+        if src_file_location is None:
+            error += "\n - Select a file with list in source langauge."
+        if target_file_location is None:
+            error += "\n - Select a file with list in target language."
+
+    if error == "Please fix the following issues before continuing:":
+        return False
+    else:
+        simpleGUI.popup(error, title="Warning")
 
 
 def generate():
-    print(output)
-    if targetLangCode == "" or output == r"":
+    print(output_location)
+    if targetLangCode == "" or output_location == r"":
         simpleGUI.popup("Please select an output location and language.", title="Warning")
         return
     credential_path = "crucial-cycling-313504-148b7392f3ca.json"
@@ -195,7 +223,7 @@ def generate():
         response = client.synthesize_speech(
             input=synthesis_input, voice=voice, audio_config=audio_config
         )
-        completeName = os.path.join(output, x.strip('\n') + ".mp3")
+        completeName = os.path.join(output_location, x.strip('\n') + ".mp3")
         # The response's audio_content is binary.
         with open(completeName, 'wb') as out:
             # Write the response to the output file.
@@ -213,13 +241,13 @@ window = simpleGUI.Window("Anki Language Learning Deck Builder", layout)
 while True:
     event, values = window.read()
 
-    if event == "-CONFIRM-":
-        if values['-FILE-']:
+    if event == key_confirm:
+        if values[key_file]:
             input_type = "file"
-        if values['-TEXT-']:
+        if values[key_text]:
             input_type = "text"
         window.close()
         main()
-    if event == "-EXIT-" or event == simpleGUI.WIN_CLOSED:
+    if event == key_exit or event == simpleGUI.WIN_CLOSED:
         window.close()
         break
