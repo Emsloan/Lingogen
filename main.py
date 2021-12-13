@@ -10,19 +10,20 @@ input_type = None
 # output = None
 output_element = [simpleGUI.Text("Please select an output folder:"), simpleGUI.Input(key="-OUTPUT_FIELD-"), simpleGUI.FolderBrowse(
     key="-OUTPUT-", enable_events=True)]
+languagePrompt = [
+        simpleGUI.Text("Please select the languages:")
+    ]
 languageSelectors = [
+        simpleGUI.Text("Source language:"),
         simpleGUI.Combo(languageList,
                         enable_events=True,
                         size=(40, 4),
                         key="-SRC LANG-"),
-
+        simpleGUI.Text("Target language:"),
         simpleGUI.Combo(languageList,
                         enable_events=True,
                         size=(40, 4),
                         key="-TARGET LANG-")
-    ]
-languagePrompt = [
-        simpleGUI.Text("Please select the source and target language:")
     ]
 buildButton = [
         simpleGUI.Button("Build Deck", enable_events=True, key="-GO-"),
@@ -44,7 +45,7 @@ selection_column = [
     ]
 ]
 
-#
+# window for file entry selection
 file_entry_column = [
     output_element
     ,
@@ -56,33 +57,23 @@ file_entry_column = [
     languageSelectors,
     buildButton,
 ]
+
+# window for text entry selection
 text_entry_column = [
     output_element,
-    [
-        simpleGUI.InputText(key='-TEXT_INPUT')
-    ],
+    languagePrompt,
     languageSelectors,
     [
-        simpleGUI.Text("Enter the word or phrase and its translation in the boxes below, then press add.")
+        simpleGUI.Text("Enter each word or phrase and its translation in the boxes below, then press 'add'.")
     ],
     [
-        simpleGUI.Text("Source:"),
-        simpleGUI.In(size=(25, 1), enable_events=True, key="-SOURCE-")
-    ],
-
-    [
-        simpleGUI.Text("Target:"),
-        simpleGUI.In(size=(25, 1), enable_events=True, key="-TARGET-")
+        simpleGUI.Text("Source: "), simpleGUI.InputText(default_text="", key='-SRC_INPUT-'),
+        simpleGUI.Text("Target: "), simpleGUI.InputText(default_text="", key='-TARGET_INPUT-')
     ],
     [
-        simpleGUI.Text("", key="-ERROR-")
+        simpleGUI.Button(key="-ADD-", auto_size_button=True, button_text="Add"),simpleGUI.Text("",key="-ERROR-")
     ],
-    [
-        simpleGUI.Button(key="-ADD-", auto_size_button=True, button_text="Add"),
-
-        simpleGUI.Button("Build Deck", enable_events=True, key="-GO-"),
-
-    ]
+    buildButton
 ]
 
 
@@ -120,9 +111,17 @@ def main():
         if event == "-SRC LANG-":  # A source language was chosen
             sourceLangCode = values["-SRC LANG-"]
         if event == "-OUTPUT-": # An output folder was selected
-            output = window["OUTPUT_FIELD"].get()
+            output = window["-OUTPUT_FIELD-"].get()
         if event == "-TEXT_OUTPUT":
-            text_file_location = window["-FILE_INPUT"].get()
+            text_file_location = window["-FILE_INPUT-"].get()
+        if event == "-ADD-":
+            if window["-SRC_INPUT-"].get() != "" and window['-TARGET_INPUT-'] != "":
+                sourceList.append(window['-SRC_INPUT'].get())
+                targetList.append(window['-TARGET_INPUT-'].get())
+                window['-ERROR-'].write("")
+            else:
+                window['-ERROR-'].write("Please enter a word in both boxes.")
+
         if event == "-GO-":  # user chooses to generate deck
             window.read()
             if output is None and targetLangCode is None and sourceLangCode is None:
@@ -207,65 +206,14 @@ window = simpleGUI.Window("Anki Language Learning Deck Builder", layout)
 
 while True:
     event, values = window.read()
-    """
-    if event == "-MANUAL-":
-        window.close()
-        manual()
-    """
-    if values['-FILE-']:
-        input_type = "file"
-    if values['-TEXT-']:
-        input_type = "text"
+
     if event == "-CONFIRM-":
+        if values['-FILE-']:
+            input_type = "file"
+        if values['-TEXT-']:
+            input_type = "text"
         window.close()
         main()
     if event == "-EXIT-" or event == simpleGUI.WIN_CLOSED:
         window.close()
         break
-
-"""
-def manual():
-    layout = [
-        [
-            sg.Column(manual_entry_column)
-        ]
-    ]
-    window = sg.Window("Anki Language Learning Deck Builder", layout)
-    # Run the Event Loop
-    while True:
-        event, values = window.read()
-        if event == "Exit" or event == sg.WIN_CLOSED:
-            break
-        # Word added to list, display words in window
-        if event == "-ADD-" and values["-SOURCE-"] != "" and values["-TARGET-"] != "":
-            sourceWord = values["-SOURCE-"]
-            targetWord = values["-TARGET-"]
-
-            # check for uniqueness
-            if sourceWord not in sourceList and targetWord not in targetList:
-                # Add source and target words to list
-                sourceList.append(sourceWord)
-                targetList.append(targetWord)
-                window['-ERROR-'].update("Word/phrase pair added!")
-                window['-SOURCE-'].update("")
-                window['-TARGET-'].update("")
-            else:
-                window['-ERROR-'].update("Please check your entries. Each word/phrase pair must be unique.")
-
-        if event == "-TARGET LANG-":  # A target language was chosen
-            targetLangCode = values["-TARGET LANG-"]
-        if event == "-SRC LANG-":  # A source language was chosen
-            sourceLangCode = values["-SRC LANG-"]
-        if event == "-OUTPUT-":
-            output = window["-INPUT-"].get()
-        if event == "-GO-":  # user chooses to generate deck
-            window.read()
-            if output == "" and targetLangCode != "":
-                sg.popup("Please select an output location.", title="Warning")
-            if output != "" and targetLangCode == "":
-                sg.popup("Please select a a target language.", title="Warning")
-            if output == "" and targetLangCode == "":
-                sg.popup("Please select an output location and a target language.", title="Warning")
-            else:
-                go()
-"""
