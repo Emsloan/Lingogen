@@ -8,27 +8,27 @@ sourceList = []
 targetList = []
 input_type = None
 # output = None
-output_element = [simpleGUI.Text("Please select an output folder:"), simpleGUI.Input(key="-OUTPUT_FIELD-"), simpleGUI.FolderBrowse(
-    key="-OUTPUT-", enable_events=True)]
+output_element = [simpleGUI.Text("Please select an output folder:"), simpleGUI.Input(key="-OUTPUT_FIELD-"),
+                  simpleGUI.FolderBrowse(
+                      key="-OUTPUT-", enable_events=True)]
 languagePrompt = [
-        simpleGUI.Text("Please select the languages:")
-    ]
+    simpleGUI.Text("Please select the languages:")
+]
 languageSelectors = [
-        simpleGUI.Text("Source language:"),
-        simpleGUI.Combo(languageList,
-                        enable_events=True,
-                        size=(40, 4),
-                        key="-SRC LANG-"),
-        simpleGUI.Text("Target language:"),
-        simpleGUI.Combo(languageList,
-                        enable_events=True,
-                        size=(40, 4),
-                        key="-TARGET LANG-")
-    ]
+    simpleGUI.Text("Source language:"),
+    simpleGUI.Combo(languageList,
+                    enable_events=True,
+                    size=(40, 4),
+                    key="-SRC LANG-"),
+    simpleGUI.Text("Target language:"),
+    simpleGUI.Combo(languageList,
+                    enable_events=True,
+                    size=(40, 4),
+                    key="-TARGET_LANG-")
+]
 buildButton = [
-        simpleGUI.Button("Build Deck", enable_events=True, key="-GO-"),
-    ]
-
+    simpleGUI.Button("Build Deck", enable_events=True, key="-GO-"),
+]
 
 # Initial window selecting input method
 selection_column = [
@@ -49,9 +49,15 @@ selection_column = [
 file_entry_column = [
     output_element
     ,
+    # choose file with source language words
     [
-        simpleGUI.Text("Please select a .txt file:"), simpleGUI.Input(key="-FILE_INPUT-"),
-        simpleGUI.FileBrowse(key="-TEXT_OUTPUT-", enable_events=True)
+        simpleGUI.Input(key="-SRC_FILE_INPUT-"),
+        simpleGUI.FileBrowse(key="-SRC_FILE-", enable_events=True)
+    ],
+    # choose file with target language words
+    [
+        simpleGUI.Input(key="-TARGET_FILE_INPUT-"),
+        simpleGUI.FileBrowse(key="-TARGET_FILE-", enable_events=True)
     ],
     languagePrompt,
     languageSelectors,
@@ -67,11 +73,11 @@ text_entry_column = [
         simpleGUI.Text("Enter each word or phrase and its translation in the boxes below, then press 'add'.")
     ],
     [
-        simpleGUI.Text("Source: "), simpleGUI.InputText(default_text="", key='-SRC_INPUT-'),
-        simpleGUI.Text("Target: "), simpleGUI.InputText(default_text="", key='-TARGET_INPUT-')
+        simpleGUI.Text("Source: "), simpleGUI.InputText(default_text="", key='-SRC_INPUT-', do_not_clear = False),
+        simpleGUI.Text("Target: "), simpleGUI.InputText(default_text="", key='-TARGET_INPUT-', do_not_clear = False)
     ],
     [
-        simpleGUI.Button(key="-ADD-", auto_size_button=True, button_text="Add"),simpleGUI.Text("",key="-ERROR-")
+        simpleGUI.Button(key="-ADD-", auto_size_button=True, button_text="Add")
     ],
     buildButton
 ]
@@ -87,9 +93,10 @@ def main():
     # output location
 
     # input location if input from .txt. file chosen
-    text_file_location = r""
+    src_file_location = r""
+    target_file_location = r""
 
-    if(input_type == "file"):
+    if (input_type == "file"):
         layout = [
             [
                 simpleGUI.Column(file_entry_column)
@@ -106,22 +113,22 @@ def main():
         event, values = window.read()
         if event == "Exit" or event == simpleGUI.WIN_CLOSED:
             break
-        if event == "-TARGET LANG-":  # A target language was chosen
-            targetLangCode = values["-TARGET LANG-"]
+        if event == "-TARGET_LANG-":  # A target language was chosen
+            targetLangCode = values["-TARGET_LANG-"]
         if event == "-SRC LANG-":  # A source language was chosen
             sourceLangCode = values["-SRC LANG-"]
-        if event == "-OUTPUT-": # An output folder was selected
+        if event == "-OUTPUT-":  # An output folder was selected
             output = window["-OUTPUT_FIELD-"].get()
-        if event == "-TEXT_OUTPUT":
-            text_file_location = window["-FILE_INPUT-"].get()
+        if event == "-SRC_FILE-":
+            src_file_location = window["-SRC_FILE_INPUT-"].get()
+        if event == "-TARGET_FILE-":
+            target_file_location = window["-TARGET_FILE_INPUT-"].get()
         if event == "-ADD-":
-            if window["-SRC_INPUT-"].get() != "" and window['-TARGET_INPUT-'] != "":
-                sourceList.append(window['-SRC_INPUT'].get())
-                targetList.append(window['-TARGET_INPUT-'].get())
-                window['-ERROR-'].write("")
+            if values['-SRC_INPUT-'] != "" and values['-TARGET_INPUT-'] != "":
+                sourceList.append(values['-SRC_INPUT-'])
+                targetList.append(values['-TARGET_INPUT-'])
             else:
-                window['-ERROR-'].write("Please enter a word in both boxes.")
-
+                simpleGUI.popup("Please add a word to both boxes.")
         if event == "-GO-":  # user chooses to generate deck
             window.read()
             if output is None and targetLangCode is None and sourceLangCode is None:
@@ -202,7 +209,6 @@ layout = [
     ]
 ]
 window = simpleGUI.Window("Anki Language Learning Deck Builder", layout)
-
 
 while True:
     event, values = window.read()
