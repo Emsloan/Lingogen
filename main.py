@@ -7,6 +7,7 @@ languageList = ['English', 'Italian', 'German', 'Japanese']
 sourceList = []
 targetList = []
 input_type = None
+error = "Please fix the following issues before continuing:"
 
 key_output_folder = "-OUTPUT-"
 key_output_field = "-OUTPUT_FIELD-"
@@ -144,11 +145,11 @@ def main():
         if event == key_source_lang:  # A source language was chosen
             sourceLangCode = values[key_source_lang]
         if event == key_output_folder:  # An output folder was selected
-            output_location = values[key_output_folder]
+            output_location = values[key_output_field]
         if event == key_src_file_folder:
-            src_file_location = values[key_src_file_folder]
+            src_file_location = values[key_src_file_field]
         if event == key_target_file_folder:
-            target_file_location = values[key_target_file_folder]
+            target_file_location = values[key_target_file_field]
         if event == key_add:
             if values[key_src_txt_input] != "" and values[key_target_txt_input] != "":
                 sourceList.append(values[key_src_txt_input])
@@ -172,7 +173,7 @@ def is_error():
     global targetLangCode
     # source language that the card
     global sourceLangCode
-    error = "Please fix the following issues before continuing:"
+    global error
     if output_location is None:
         error += "\n - Select an output location."
     if targetLangCode is None:
@@ -185,9 +186,11 @@ def is_error():
         if target_file_location is None:
             error += "\n - Select a file with list in target language."
     if error == "Please fix the following issues before continuing:":
+        error = "Please fix the following issues before continuing:"
         return False
     else:
         simpleGUI.popup(error, title="Warning")
+        error = "Please fix the following issues before continuing:"
         return True
 
 
