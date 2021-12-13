@@ -26,10 +26,14 @@ key_add = "-ADD-"
 key_exit = "-EXIT-"
 
 # output = None
-global output_location
+output_location = None
 # input location if input from .txt. file chosen
-global src_file_location
-global target_file_location
+src_file_location = None
+target_file_location = None
+# target language that the card audio will be created in
+targetLangCode = None
+# source language that the card
+sourceLangCode = None
 
 output_element = [simpleGUI.Text("Please select an output folder:"), simpleGUI.Input(key=key_output_field),
                   simpleGUI.FolderBrowse(
@@ -110,6 +114,9 @@ text_entry_column = [
 
 def main():
     global output_location
+    # input location if input from .txt. file chosen
+    global src_file_location
+    global target_file_location
     # target language that the card audio will be created in
     global targetLangCode
     # source language that the card
@@ -137,11 +144,11 @@ def main():
         if event == key_source_lang:  # A source language was chosen
             sourceLangCode = values[key_source_lang]
         if event == key_output_folder:  # An output folder was selected
-            output_location = window[key_output_field].get()
+            output_location = values[key_output_folder]
         if event == key_src_file_folder:
-            src_file_location = window[key_src_file_field].get()
+            src_file_location = values[key_src_file_folder]
         if event == key_target_file_folder:
-            target_file_location = window[key_target_file_field].get()
+            target_file_location = values[key_target_file_folder]
         if event == key_add:
             if values[key_src_txt_input] != "" and values[key_target_txt_input] != "":
                 sourceList.append(values[key_src_txt_input])
@@ -150,15 +157,21 @@ def main():
                 simpleGUI.popup("Please add a word to both boxes.")
         if event == key_go:  # user chooses to generate deck
             window.read()
-            is_error()
+            if not is_error():
                 window.close()
                 simpleGUI.popup("Deck generated!", title="Success")
                 generate()
-            else:
-                is_error()
 
 
-def  is_error():
+def is_error():
+    global output_location
+    # input location if input from .txt. file chosen
+    global src_file_location
+    global target_file_location
+    # target language that the card audio will be created in
+    global targetLangCode
+    # source language that the card
+    global sourceLangCode
     error = "Please fix the following issues before continuing:"
     if output_location is None:
         error += "\n - Select an output location."
@@ -166,47 +179,44 @@ def  is_error():
         error += "\n - Select a target language."
     if sourceLangCode is None:
         error += "\n - Select a source language."
-    if(input_type == "file"):
+    if input_type == "file":
         if src_file_location is None:
             error += "\n - Select a file with list in source langauge."
         if target_file_location is None:
             error += "\n - Select a file with list in target language."
-
     if error == "Please fix the following issues before continuing:":
         return False
     else:
         simpleGUI.popup(error, title="Warning")
+        return True
 
 
 def generate():
     print(output_location)
-    if targetLangCode == "" or output_location == r"":
-        simpleGUI.popup("Please select an output location and language.", title="Warning")
-        return
     credential_path = "crucial-cycling-313504-148b7392f3ca.json"
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credential_path
     # os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="C:/Users/exman/Downloads/crucial-cycling-313504-148b7392f3ca.json"
     # Instantiates a client
 
     client = texttospeech.TextToSpeechClient()
-    lang = targetLangCode[0]
+
     voice = texttospeech.VoiceSelectionParams()
-    if lang == "English":
+    if targetLangCode == "English":
         voice = texttospeech.VoiceSelectionParams(
             language_code='en-US',
             name='en-US-Wavenet-J',
             ssml_gender=texttospeech.SsmlVoiceGender.MALE)
-    elif lang == "Italian":
+    elif targetLangCode == "Italian":
         voice = texttospeech.VoiceSelectionParams(
             language_code='it-IT',
             name='it-IT-Wavenet-D',
             ssml_gender=texttospeech.SsmlVoiceGender.MALE)
-    elif lang == "German":
+    elif targetLangCode == "German":
         voice = texttospeech.VoiceSelectionParams(
             language_code='de-DE',
             name='de-DE-Wavenet-D',
             ssml_gender=texttospeech.SsmlVoiceGender.MALE)
-    elif lang == "Japanese":
+    elif targetLangCode == "Japanese":
         voice = texttospeech.VoiceSelectionParams(
             language_code='ja-JP',
             name='ja-JP-Wavenet-C',
@@ -223,9 +233,9 @@ def generate():
         response = client.synthesize_speech(
             input=synthesis_input, voice=voice, audio_config=audio_config
         )
-        completeName = os.path.join(output_location, x.strip('\n') + ".mp3")
+        complete_name = os.path.join(output_location, x.strip('\n') + ".mp3")
         # The response's audio_content is binary.
-        with open(completeName, 'wb') as out:
+        with open(complete_name, 'wb') as out:
             # Write the response to the output file.
             out.write(response.audio_content)
     simpleGUI.popup("Audio Files Created", title="Anki Audio Generator ")
