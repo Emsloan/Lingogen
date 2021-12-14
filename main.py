@@ -135,6 +135,11 @@ def main():
                 simpleGUI.Column(text_entry_column)
             ]
         ]
+
+
+        """
+        TODO: CHECK ERROR HANDLING, SPECIFICALLY READING VALUES FROM OUTPUT AND SRC/TARGET LANG
+        """
     window = simpleGUI.Window("Anki Language Learning Deck Builder", layout)
     while True:
         event, values = window.read()
@@ -144,11 +149,11 @@ def main():
             targetLangCode = values[key_target_lang]
         if event == key_source_lang:  # A source language was chosen
             sourceLangCode = values[key_source_lang]
-        if event == key_output_folder:  # An output folder was selected
+        if event == key_output_field:  # An output folder was selected
             output_location = values[key_output_field]
-        if event == key_src_file_folder:
+        if event == key_src_file_field:
             src_file_location = values[key_src_file_field]
-        if event == key_target_file_folder:
+        if event == key_target_file_field:
             target_file_location = values[key_target_file_field]
         if event == key_add:
             if values[key_src_txt_input] != "" and values[key_target_txt_input] != "":
@@ -174,10 +179,14 @@ def is_error():
     # source language that the card
     global sourceLangCode
     global error
+    error= "Please fix the following issues before continuing:"
+    print(output_location)
     if output_location is None:
         error += "\n - Select an output location."
+    print(targetLangCode)
     if targetLangCode is None:
         error += "\n - Select a target language."
+    print(sourceLangCode)
     if sourceLangCode is None:
         error += "\n - Select a source language."
     if input_type == "file":
@@ -190,7 +199,6 @@ def is_error():
         return False
     else:
         simpleGUI.popup(error, title="Warning")
-        error = "Please fix the following issues before continuing:"
         return True
 
 
