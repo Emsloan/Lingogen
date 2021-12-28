@@ -149,7 +149,7 @@ def main():
             targetLangCode = values[key_target_lang]
         if event == key_source_lang:  # A source language was chosen
             sourceLangCode = values[key_source_lang]
-        if event == key_output_field:  # An output folder was selected
+        if event == key_output_folder:  # An output folder was selected
             output_location = values[key_output_field]
         if event == key_src_file_field:
             src_file_location = values[key_src_file_field]
@@ -162,7 +162,7 @@ def main():
             else:
                 simpleGUI.popup("Please add a word to both boxes.")
         if event == key_go:  # user chooses to generate deck
-            window.read()
+            # window.read()
             if not is_error():
                 window.close()
                 simpleGUI.popup("Deck generated!", title="Success")
