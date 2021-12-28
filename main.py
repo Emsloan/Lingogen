@@ -27,7 +27,7 @@ key_add = "-ADD-"
 key_exit = "-EXIT-"
 
 # output = None
-output_location = None
+global output_location
 # input location if input from .txt. file chosen
 src_file_location = None
 target_file_location = None
@@ -36,7 +36,7 @@ targetLangCode = None
 # source language that the card
 sourceLangCode = None
 
-output_element = [simpleGUI.Text("Please select an output folder:"), simpleGUI.Input(key=key_output_field),
+output_element = [simpleGUI.Text("Please select an output folder:"), simpleGUI.Input(key=key_output_field, enable_events=True),
                   simpleGUI.FolderBrowse(
                       key=key_output_folder, enable_events=True)]
 languagePrompt = [
@@ -123,7 +123,7 @@ def main():
     # source language that the card
     global sourceLangCode
 
-    if (input_type == "file"):
+    if input_type == "file":
         layout = [
             [
                 simpleGUI.Column(file_entry_column)
@@ -149,7 +149,7 @@ def main():
             targetLangCode = values[key_target_lang]
         if event == key_source_lang:  # A source language was chosen
             sourceLangCode = values[key_source_lang]
-        if event == key_output_folder:  # An output folder was selected
+        if event == key_output_field:  # An output folder was selected
             output_location = values[key_output_field]
         if event == key_src_file_field:
             src_file_location = values[key_src_file_field]
@@ -163,14 +163,14 @@ def main():
                 simpleGUI.popup("Please add a word to both boxes.")
         if event == key_go:  # user chooses to generate deck
             # window.read()
-            if not is_error():
+            if not is_error(values):
                 window.close()
                 simpleGUI.popup("Deck generated!", title="Success")
                 generate()
 
 
-def is_error():
-    global output_location
+def is_error(values):
+    # global output_location
     # input location if input from .txt. file chosen
     global src_file_location
     global target_file_location
