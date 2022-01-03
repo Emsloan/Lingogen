@@ -2,11 +2,28 @@
 from google.cloud import texttospeech
 import PySimpleGUI as simpleGUI
 import os.path
+import genanki
 
 languageList = ['English', 'Italian', 'German', 'Japanese']
-sourceList = []
-targetList = []
+sourceList = list()
+targetList = list()
+fileList = list()
 input_type = None
+model = genanki.Model(
+    1607392319,
+    'Simple Model',
+    fields=[
+        {'name': 'Question'},
+        {'name': 'Answer'},
+    ],
+    templates=[
+        {
+            'name': 'Card 1',
+            'qfmt': '{{Question}}',
+            'afmt': '{{FrontSide}}<hr id="answer">{{Answer}}',
+        },
+    ])
+
 error = "Please fix the following issues before continuing:"
 
 key_output_folder = "-OUTPUT-"
@@ -36,9 +53,6 @@ targetLangCode = None
 # source language that the card
 sourceLangCode = None
 
-output_element = [simpleGUI.Text("Please select an output folder:"), simpleGUI.Input(key=key_output_field, enable_events=True),
-                  simpleGUI.FolderBrowse(
-                      key=key_output_folder, enable_events=True)]
 languagePrompt = [
     simpleGUI.Text("Please select the languages:")
 ]
@@ -73,6 +87,13 @@ selection_column = [
     ]
 ]
 
+output_element = \
+    [
+        simpleGUI.Text("Please select an output folder:"),
+        simpleGUI.Input(key=key_output_field, enable_events=True),
+        simpleGUI.FolderBrowse(key=key_output_folder, enable_events=True)
+    ]
+
 # window for file entry selection
 file_entry_column = [
     output_element
@@ -80,13 +101,13 @@ file_entry_column = [
     # choose file with source language words
     [
         simpleGUI.Text("Please .txt file in source language:"),
-        simpleGUI.Input(key=key_src_file_field),
+        simpleGUI.Input(key=key_src_file_field, enable_events=True),
         simpleGUI.FileBrowse(key=key_src_file_folder, enable_events=True)
     ],
     # choose file with target language words
     [
         simpleGUI.Text("Please .txt file in target language:"),
-        simpleGUI.Input(key=key_target_file_field),
+        simpleGUI.Input(key=key_target_file_field, enable_events=True),
         simpleGUI.FileBrowse(key=key_target_file_folder, enable_events=True)
     ],
     languagePrompt,
@@ -122,6 +143,8 @@ def main():
     global targetLangCode
     # source language that the card
     global sourceLangCode
+    global sourceList
+    global targetList
 
     if input_type == "file":
         layout = [
@@ -135,7 +158,6 @@ def main():
                 simpleGUI.Column(text_entry_column)
             ]
         ]
-
 
         """
         TODO: CHECK ERROR HANDLING, SPECIFICALLY READING VALUES FROM OUTPUT AND SRC/TARGET LANG
@@ -153,8 +175,12 @@ def main():
             output_location = values[key_output_field]
         if event == key_src_file_field:
             src_file_location = values[key_src_file_field]
+            file = open(src_file_location)
+            sourceList = file.readlines()
         if event == key_target_file_field:
             target_file_location = values[key_target_file_field]
+            file = open(target_file_location)
+            targetList = file.readlines()
         if event == key_add:
             if values[key_src_txt_input] != "" and values[key_target_txt_input] != "":
                 sourceList.append(values[key_src_txt_input])
@@ -179,7 +205,7 @@ def is_error(values):
     # source language that the card
     global sourceLangCode
     global error
-    error= "Please fix the following issues before continuing:"
+    error = "Please fix the following issues before continuing:"
     print(output_location)
     if output_location is None:
         error += "\n - Select an output location."
@@ -203,7 +229,6 @@ def is_error(values):
 
 
 def generate():
-    print(output_location)
     credential_path = "crucial-cycling-313504-148b7392f3ca.json"
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credential_path
     # os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="C:/Users/exman/Downloads/crucial-cycling-313504-148b7392f3ca.json"
@@ -237,7 +262,7 @@ def generate():
     audio_config = texttospeech.AudioConfig(
         audio_encoding=texttospeech.AudioEncoding.MP3)
 
-    for x in list:
+    for x in targetList:
         synthesis_input = texttospeech.SynthesisInput(text=x)
         # Perform the text-to-speech request on the text input with the selected
         # voice parameters and audio file type
@@ -245,11 +270,14 @@ def generate():
             input=synthesis_input, voice=voice, audio_config=audio_config
         )
         complete_name = os.path.join(output_location, x.strip('\n') + ".mp3")
+        fileList.append(complete_name)
         # The response's audio_content is binary.
         with open(complete_name, 'wb') as out:
             # Write the response to the output file.
             out.write(response.audio_content)
-    simpleGUI.popup("Audio Files Created", title="Anki Audio Generator ")
+    # simpleGUI.popup("Audio Files Created", title="Anki Audio Generator ")
+    for i in range(len(sourceList)):
+        my_note = genanki.Note(model=model, fields=[sourceList[i], targetList[i]])
 
 
 layout = [
