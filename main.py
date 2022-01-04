@@ -3,23 +3,45 @@ from google.cloud import texttospeech
 import PySimpleGUI as simpleGUI
 import os.path
 import genanki
+import random
 
 languageList = ['English', 'Italian', 'German', 'Japanese']
 sourceList = list()
 targetList = list()
 fileList = list()
 input_type = None
+deck_name = 'Italian Made Simple: Capitolo 5'
+model_id = random.randrange(1 << 30, 1 << 31)
+model_reverse_id = random.randrange(1 << 30, 1 << 31)
+
 model = genanki.Model(
-    1607392319,
+    model_id,
     'Simple Model',
     fields=[
         {'name': 'Question'},
         {'name': 'Answer'},
+        {'name': 'Media'}
     ],
     templates=[
         {
             'name': 'Card 1',
             'qfmt': '{{Question}}',
+            'afmt': '{{FrontSide}}<hr id="answer">{{Answer}}<br>{{Media}}',
+        },
+    ])
+
+model_reverse = genanki.Model(
+    model_reverse_id,
+    'Simple Model',
+    fields=[
+        {'name': 'Question'},
+        {'name': 'Answer'},
+        {'name': 'Media'}
+    ],
+    templates=[
+        {
+            'name': 'Card 1',
+            'qfmt': '{{Question}}<br>{{Media}}',
             'afmt': '{{FrontSide}}<hr id="answer">{{Answer}}',
         },
     ])
@@ -133,6 +155,13 @@ text_entry_column = [
     buildButton
 ]
 
+layout = [
+    [
+        simpleGUI.Column(selection_column)
+    ]
+]
+window = simpleGUI.Window("Anki Language Learning Deck Builder", layout)
+
 
 def main():
     global output_location
@@ -145,6 +174,9 @@ def main():
     global sourceLangCode
     global sourceList
     global targetList
+    global layout
+    global window
+    global event, values
 
     if input_type == "file":
         layout = [
@@ -189,13 +221,38 @@ def main():
                 simpleGUI.popup("Please add a word to both boxes.")
         if event == key_go:  # user chooses to generate deck
             # window.read()
-            if not is_error(values):
+            if not is_error():
                 window.close()
                 simpleGUI.popup("Deck generated!", title="Success")
-                generate()
+                create_mp3()
+                create_deck()
 
 
-def is_error(values):
+def test():
+    global output_location
+    # input location if input from .txt. file chosen
+    global src_file_location
+    global target_file_location
+    # target language that the card audio will be created in
+    global targetLangCode
+    # source language that the card
+    global sourceLangCode
+    global sourceList
+    global targetList
+    targetLangCode = 'Italian'
+    sourceLangCode = 'English'
+    output_location = 'C:/Users/exman/Desktop/Mp3s'
+    src_file_location = 'C:/Users/exman/Desktop/source.txt'
+    file = open(src_file_location, encoding='utf-8')
+    sourceList = file.readlines()
+    target_file_location = 'C:/Users/exman/Desktop/target.txt'
+    file = open(target_file_location, encoding='utf-8')
+    targetList = file.readlines()
+    create_mp3()
+    create_deck()
+
+
+def is_error():
     # global output_location
     # input location if input from .txt. file chosen
     global src_file_location
@@ -206,13 +263,10 @@ def is_error(values):
     global sourceLangCode
     global error
     error = "Please fix the following issues before continuing:"
-    print(output_location)
     if output_location is None:
         error += "\n - Select an output location."
-    print(targetLangCode)
     if targetLangCode is None:
         error += "\n - Select a target language."
-    print(sourceLangCode)
     if sourceLangCode is None:
         error += "\n - Select a source language."
     if input_type == "file":
@@ -228,15 +282,18 @@ def is_error(values):
         return True
 
 
-def generate():
+def create_mp3():
+    for (a, b) in zip(targetList, sourceList):
+        a.strip('\n')
+        a.strip()
+        b.strip('\n')
+        b.strip()
+
     credential_path = "crucial-cycling-313504-148b7392f3ca.json"
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credential_path
-    # os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="C:/Users/exman/Downloads/crucial-cycling-313504-148b7392f3ca.json"
-    # Instantiates a client
 
     client = texttospeech.TextToSpeechClient()
 
-    voice = texttospeech.VoiceSelectionParams()
     if targetLangCode == "English":
         voice = texttospeech.VoiceSelectionParams(
             language_code='en-US',
@@ -259,8 +316,7 @@ def generate():
             ssml_gender=texttospeech.SsmlVoiceGender.MALE)
 
     # Select the type of audio file you want returned
-    audio_config = texttospeech.AudioConfig(
-        audio_encoding=texttospeech.AudioEncoding.MP3)
+    audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.MP3)
 
     for x in targetList:
         synthesis_input = texttospeech.SynthesisInput(text=x)
@@ -270,33 +326,54 @@ def generate():
             input=synthesis_input, voice=voice, audio_config=audio_config
         )
         complete_name = os.path.join(output_location, x.strip('\n') + ".mp3")
+        complete_name = (output_location + '/' + x.strip('\n').replace('/', '_') + '.mp3')
+
+        print(complete_name)
         fileList.append(complete_name)
         # The response's audio_content is binary.
         with open(complete_name, 'wb') as out:
             # Write the response to the output file.
             out.write(response.audio_content)
-    # simpleGUI.popup("Audio Files Created", title="Anki Audio Generator ")
-    for i in range(len(sourceList)):
-        my_note = genanki.Note(model=model, fields=[sourceList[i], targetList[i]])
 
 
-layout = [
-    [
-        simpleGUI.Column(selection_column)
-    ]
-]
-window = simpleGUI.Window("Anki Language Learning Deck Builder", layout)
+def create_deck():
+    deck = genanki.Deck(
+        random.randrange(1 << 30, 1 << 31),
+        deck_name)
+    package = genanki.Package(deck)
+    i = 1
+    for (source, target) in zip(sourceList, targetList):
+        package.media_files.append(output_location + '/' + target.strip('\n ').replace('/', '_') + '.mp3')
+        media = '[sound:' + target.strip('\n ').replace('/', '_') + '.mp3' + ']'
+        note = genanki.Note(
+            model=model,
+            fields=[source, target, media]
+        )
+        deck.add_note(note)
+
+    for (source, target) in zip(sourceList, targetList):
+        media = '[sound:' + target.strip('\n ').replace('/', '_') + '.mp3' + ']'
+        note = genanki.Note(
+            model=model_reverse,
+            fields=[target, source, media]
+        )
+        deck.add_note(note)
+
+    package.write_to_file(output_location + '\\output.apkg')
+
 
 while True:
-    event, values = window.read()
+    # event, values = window.read()
 
-    if event == key_confirm:
-        if values[key_file]:
-            input_type = "file"
-        if values[key_text]:
-            input_type = "text"
-        window.close()
-        main()
-    if event == key_exit or event == simpleGUI.WIN_CLOSED:
-        window.close()
-        break
+    test()
+    break
+    # if event == key_confirm:
+    #     if values[key_file]:
+    #         input_type = "file"
+    #     if values[key_text]:
+    #         input_type = "text"
+    #     window.close()
+    #     main()
+    # if event == key_exit or event == simpleGUI.WIN_CLOSED:
+    #     window.close()
+    #     break
