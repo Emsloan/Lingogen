@@ -10,7 +10,7 @@ sourceList = list()
 targetList = list()
 fileList = list()
 input_type = None
-deck_name = 'Italian Made Simple: Capitolo 5'
+deck_name = 'Italian Made Simple: Capitolo 7'
 model_id = random.randrange(1 << 30, 1 << 31)
 model_reverse_id = random.randrange(1 << 30, 1 << 31)
 
@@ -64,6 +64,13 @@ key_src_txt_input = '-SRC_INPUT-'
 key_target_txt_input = '-TARGET_INPUT-'
 key_add = "-ADD-"
 key_exit = "-EXIT-"
+
+
+def clean_list(file):
+    lines = (line.rstrip() for line in file)  # All lines including the blank ones
+    lines = list(line for line in lines if line)
+    return lines
+
 
 # output = None
 global output_location
@@ -208,11 +215,11 @@ def main():
         if event == key_src_file_field:
             src_file_location = values[key_src_file_field]
             file = open(src_file_location)
-            sourceList = file.readlines()
+            sourceList = clean_list(file)
         if event == key_target_file_field:
             target_file_location = values[key_target_file_field]
             file = open(target_file_location)
-            targetList = file.readlines()
+            targetList = clean_list(file)
         if event == key_add:
             if values[key_src_txt_input] != "" and values[key_target_txt_input] != "":
                 sourceList.append(values[key_src_txt_input])
@@ -244,10 +251,11 @@ def test():
     output_location = 'C:/Users/exman/Desktop/Mp3s'
     src_file_location = 'C:/Users/exman/Desktop/source.txt'
     file = open(src_file_location, encoding='utf-8')
-    sourceList = file.readlines()
+    sourceList = clean_list(file)
     target_file_location = 'C:/Users/exman/Desktop/target.txt'
     file = open(target_file_location, encoding='utf-8')
-    targetList = file.readlines()
+    targetList = clean_list(file)
+
     create_mp3()
     create_deck()
 
@@ -325,14 +333,10 @@ def create_mp3():
         response = client.synthesize_speech(
             input=synthesis_input, voice=voice, audio_config=audio_config
         )
-        complete_name = os.path.join(output_location, x.strip('\n') + ".mp3")
-        complete_name = (output_location + '/' + x.strip('\n').replace('/', '_') + '.mp3')
-
-        print(complete_name)
+        complete_name = (output_location + '/' + x.strip('\n').replace('/', '_').replace('?', '') + '.mp3')
         fileList.append(complete_name)
         # The response's audio_content is binary.
         with open(complete_name, 'wb') as out:
-            # Write the response to the output file.
             out.write(response.audio_content)
 
 
@@ -342,17 +346,19 @@ def create_deck():
         deck_name)
     package = genanki.Package(deck)
     i = 1
-    for (source, target) in zip(sourceList, targetList):
-        package.media_files.append(output_location + '/' + target.strip('\n ').replace('/', '_') + '.mp3')
-        media = '[sound:' + target.strip('\n ').replace('/', '_') + '.mp3' + ']'
+    for (source, target, name) in zip(sourceList, targetList, fileList):
+        package.media_files.append(name)
+        media = '[sound:' + name.replace(output_location + '/', '') + ']'
+        print(media)
         note = genanki.Note(
             model=model,
             fields=[source, target, media]
         )
         deck.add_note(note)
 
-    for (source, target) in zip(sourceList, targetList):
-        media = '[sound:' + target.strip('\n ').replace('/', '_') + '.mp3' + ']'
+    for (source, target, name) in zip(sourceList, targetList, fileList):
+        media = '[sound:' + name.replace(output_location + '/', '') + ']'
+        print(media)
         note = genanki.Note(
             model=model_reverse,
             fields=[target, source, media]
@@ -363,17 +369,19 @@ def create_deck():
 
 
 while True:
-    # event, values = window.read()
+    event, values = window.read()
 
-    test()
-    break
-    # if event == key_confirm:
-    #     if values[key_file]:
-    #         input_type = "file"
-    #     if values[key_text]:
-    #         input_type = "text"
-    #     window.close()
-    #     main()
-    # if event == key_exit or event == simpleGUI.WIN_CLOSED:
-    #     window.close()
-    #     break
+    # uncomment to test
+    # test()
+    # break
+
+    if event == key_confirm:
+        if values[key_file]:
+            input_type = "file"
+        if values[key_text]:
+            input_type = "text"
+        window.close()
+        main()
+    if event == key_exit or event == simpleGUI.WIN_CLOSED:
+        window.close()
+        break
