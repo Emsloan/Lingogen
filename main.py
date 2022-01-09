@@ -1,19 +1,19 @@
-# img_viewer.py
 from google.cloud import texttospeech
 import PySimpleGUI as simpleGUI
 import os.path
 import genanki
 import random
 
-languageList = ['English', 'Italian', 'German', 'Japanese']
-sourceList = list()
-targetList = list()
-fileList = list()
-input_type = None
-deck_name = 'Italian Made Simple: Capitolo 7'
-model_id = random.randrange(1 << 30, 1 << 31)
-model_reverse_id = random.randrange(1 << 30, 1 << 31)
+languageList = ['English', 'Italian', 'German', 'Japanese']  # list of supported target language types
+sourceList = list()  # holds words in source language
+targetList = list()  # holds words in target language
+fileList = list()  # holds filenames
+input_type = None  # determines GUI type
+deck_name = 'My Deck'  # name of deck and package
+model_id = random.randrange(1 << 30, 1 << 31)  # unique id for anki note model
+model_reverse_id = random.randrange(1 << 30, 1 << 31)  # unique id for reversed note model
 
+# TODO: make it so card name is unique and changed per card creation
 model = genanki.Model(
     model_id,
     'Simple Model',
@@ -30,6 +30,7 @@ model = genanki.Model(
         },
     ])
 
+# TODO: see note above 'model'
 model_reverse = genanki.Model(
     model_reverse_id,
     'Simple Model',
@@ -46,8 +47,9 @@ model_reverse = genanki.Model(
         },
     ])
 
-error = "Please fix the following issues before continuing:"
+error = "Please fix the following issues before continuing:"  # default error message
 
+# keys for reading values from GUI elements
 key_output_folder = "-OUTPUT-"
 key_output_field = "-OUTPUT_FIELD-"
 key_source_lang = "-SRC LANG-"
@@ -67,24 +69,29 @@ key_exit = "-EXIT-"
 
 
 def clean_list(file):
+    """Is passed an open text file and returns a 'cleaned' list with blank lines removed"""
     lines = (line.rstrip() for line in file)  # All lines including the blank ones
     lines = list(line for line in lines if line)
     return lines
 
 
-# output = None
+# the folder where the deck will be created
 global output_location
-# input location if input from .txt. file chosen
+# location of the txt file for source list
 src_file_location = None
+# location of the txt file for target list
 target_file_location = None
-# target language that the card audio will be created in
+# target language
 targetLangCode = None
-# source language that the card
+# source language
 sourceLangCode = None
 
+# GUI element that asks user to choose a language
 languagePrompt = [
     simpleGUI.Text("Please select the languages:")
 ]
+
+# GUI element that lets the user choose a language
 languageSelectors = [
     simpleGUI.Text("Source language:"),
     simpleGUI.Combo(languageList,
@@ -97,6 +104,8 @@ languageSelectors = [
                     size=(40, 4),
                     key=key_target_lang)
 ]
+
+# GUI button that prompts the building of the deck
 buildButton = [
     simpleGUI.Button("Build Deck", enable_events=True, key=key_go),
 ]
@@ -116,6 +125,7 @@ selection_column = [
     ]
 ]
 
+# GUI element that lets the user select an output folder for the finished deck
 output_element = \
     [
         simpleGUI.Text("Please select an output folder:"),
@@ -198,9 +208,6 @@ def main():
             ]
         ]
 
-        """
-        TODO: CHECK ERROR HANDLING, SPECIFICALLY READING VALUES FROM OUTPUT AND SRC/TARGET LANG
-        """
     window = simpleGUI.Window("Anki Language Learning Deck Builder", layout)
     while True:
         event, values = window.read()
@@ -369,11 +376,10 @@ def create_deck():
 
 
 while True:
-    event, values = window.read()
-
     # uncomment to test
     # test()
     # break
+    event, values = window.read()
 
     if event == key_confirm:
         if values[key_file]:
