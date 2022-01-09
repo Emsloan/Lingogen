@@ -172,6 +172,7 @@ text_entry_column = [
     buildButton
 ]
 
+# GUI element that contains the other elements
 layout = [
     [
         simpleGUI.Column(selection_column)
@@ -181,13 +182,13 @@ window = simpleGUI.Window("Anki Language Learning Deck Builder", layout)
 
 
 def main():
+    """Reads user input, displays GUI based on chosen input type, handles GUI events"""
+
+    # global redeclarations
     global output_location
-    # input location if input from .txt. file chosen
     global src_file_location
     global target_file_location
-    # target language that the card audio will be created in
     global targetLangCode
-    # source language that the card
     global sourceLangCode
     global sourceList
     global targetList
@@ -195,6 +196,7 @@ def main():
     global window
     global event, values
 
+    # checks chosen input type, constructs layout accordingly
     if input_type == "file":
         layout = [
             [
@@ -209,8 +211,14 @@ def main():
         ]
 
     window = simpleGUI.Window("Anki Language Learning Deck Builder", layout)
+
+    # main loop, where GUI elements are read. Calls error handling function
     while True:
+
+        # read values from GUI elements
         event, values = window.read()
+
+        # close window
         if event == "Exit" or event == simpleGUI.WIN_CLOSED:
             break
         if event == key_target_lang:  # A target language was chosen
@@ -219,23 +227,22 @@ def main():
             sourceLangCode = values[key_source_lang]
         if event == key_output_field:  # An output folder was selected
             output_location = values[key_output_field]
-        if event == key_src_file_field:
-            src_file_location = values[key_src_file_field]
-            file = open(src_file_location)
-            sourceList = clean_list(file)
-        if event == key_target_file_field:
-            target_file_location = values[key_target_file_field]
-            file = open(target_file_location)
-            targetList = clean_list(file)
-        if event == key_add:
-            if values[key_src_txt_input] != "" and values[key_target_txt_input] != "":
-                sourceList.append(values[key_src_txt_input])
-                targetList.append(values[key_target_txt_input])
+        if event == key_src_file_field:  # A file for the source words was provided
+            src_file_location = values[key_src_file_field]  # read file path
+            file = open(src_file_location)  # open file
+            sourceList = clean_list(file)  # save lines to list with blank lines removed
+        if event == key_target_file_field:  # a file for the target words was provided
+            target_file_location = values[key_target_file_field]  # read file path
+            file = open(target_file_location)  # open file
+            targetList = clean_list(file)  # save lines to list with blank lines removed
+        if event == key_add:  # the user pressed the 'add' button
+            if values[key_src_txt_input] != "" and values[key_target_txt_input] != "":  # verify both boxes have values
+                sourceList.append(values[key_src_txt_input])  # add source word
+                targetList.append(values[key_target_txt_input])  # add target word
             else:
-                simpleGUI.popup("Please add a word to both boxes.")
+                simpleGUI.popup("Please add a word to both boxes.")  # display an error to the user
         if event == key_go:  # user chooses to generate deck
-            # window.read()
-            if not is_error():
+            if not is_error():  # call error handling method
                 window.close()
                 simpleGUI.popup("Deck generated!", title="Success")
                 create_mp3()
@@ -268,36 +275,34 @@ def test():
 
 
 def is_error():
-    # global output_location
-    # input location if input from .txt. file chosen
+
+    """Verifies all necessary values are knows, or displays error popups asking the user to fix problems"""
     global src_file_location
     global target_file_location
-    # target language that the card audio will be created in
     global targetLangCode
-    # source language that the card
     global sourceLangCode
     global error
-    error = "Please fix the following issues before continuing:"
-    if output_location is None:
+
+    if output_location is None:  # if an output location isn't chosen
         error += "\n - Select an output location."
-    if targetLangCode is None:
+    if targetLangCode is None:  # if a target language isn't selected
         error += "\n - Select a target language."
-    if sourceLangCode is None:
+    if sourceLangCode is None:  # if a source language isn't selected
         error += "\n - Select a source language."
-    if input_type == "file":
+    if input_type == "file":  # if a source/target file isn't selected
         if src_file_location is None:
             error += "\n - Select a file with list in source langauge."
         if target_file_location is None:
             error += "\n - Select a file with list in target language."
-    if error == "Please fix the following issues before continuing:":
-        error = "Please fix the following issues before continuing:"
+    if error == "Please fix the following issues before continuing:":  # if no issues
         return False
-    else:
+    else:  # display error popup
         simpleGUI.popup(error, title="Warning")
         return True
 
 
 def create_mp3():
+    """Generates mp3s with TTS sounds from list of target words"""
     for (a, b) in zip(targetList, sourceList):
         a.strip('\n')
         a.strip()
