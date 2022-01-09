@@ -66,6 +66,7 @@ key_src_txt_input = '-SRC_INPUT-'
 key_target_txt_input = '-TARGET_INPUT-'
 key_add = "-ADD-"
 key_exit = "-EXIT-"
+key_deck_name = "-DECK_NAME-"
 
 
 def clean_list(file):
@@ -125,6 +126,14 @@ selection_column = [
     ]
 ]
 
+# Deck name element
+
+deck_name_element = \
+    [
+        simpleGUI.Text("Deck name:"),
+        simpleGUI.Input(key=key_deck_name, enable_events=True),
+    ]
+
 # GUI element that lets the user select an output folder for the finished deck
 output_element = \
     [
@@ -151,6 +160,7 @@ file_entry_column = [
     ],
     languagePrompt,
     languageSelectors,
+    deck_name_element,
     buildButton,
 ]
 
@@ -169,6 +179,7 @@ text_entry_column = [
     [
         simpleGUI.Button(key=key_add, auto_size_button=True, button_text="Add")
     ],
+    deck_name_element,
     buildButton
 ]
 
@@ -195,6 +206,7 @@ def main():
     global layout
     global window
     global event, values
+    global deck_name
 
     # checks chosen input type, constructs layout accordingly
     if input_type == "file":
@@ -221,6 +233,8 @@ def main():
         # close window
         if event == "Exit" or event == simpleGUI.WIN_CLOSED:
             break
+        if event == key_deck_name:
+            deck_name = values[key_deck_name]
         if event == key_target_lang:  # A target language was chosen
             targetLangCode = values[key_target_lang]
         if event == key_source_lang:  # A source language was chosen
@@ -390,7 +404,7 @@ def create_deck():
         )
         deck.add_note(note)
 
-    package.write_to_file(output_location + '\\output.apkg')
+    package.write_to_file(output_location + '\\'+deck_name+'.apkg')
 
 
 # loop for first, input type prompt, GUI popup
