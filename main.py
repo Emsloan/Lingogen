@@ -397,7 +397,6 @@ def create_deck():
     # repeat previous process with reverse versions of cards
     for (source, target, name) in zip(sourceList, targetList, fileList):
         media = '[sound:' + name.replace(output_location + '/', '') + ']'
-        print(media)
         note = genanki.Note(
             model=model_reverse,
             fields=[target, source, media]
