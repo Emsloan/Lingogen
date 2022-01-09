@@ -275,7 +275,6 @@ def test():
 
 
 def is_error():
-
     """Verifies all necessary values are knows, or displays error popups asking the user to fix problems"""
     global src_file_location
     global target_file_location
@@ -302,18 +301,21 @@ def is_error():
 
 
 def create_mp3():
-    """Generates mp3s with TTS sounds from list of target words"""
+    """Generates mp3s from list of target words using TTS"""
+
+    # strip newline characters
     for (a, b) in zip(targetList, sourceList):
         a.strip('\n')
         a.strip()
         b.strip('\n')
         b.strip()
 
+    # defining client for TTS
     credential_path = "crucial-cycling-313504-148b7392f3ca.json"
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credential_path
-
     client = texttospeech.TextToSpeechClient()
 
+    # creating voice variable based on target language
     if targetLangCode == "English":
         voice = texttospeech.VoiceSelectionParams(
             language_code='en-US',
@@ -338,6 +340,7 @@ def create_mp3():
     # Select the type of audio file you want returned
     audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.MP3)
 
+    # write an mp3 for each word in target list
     for x in targetList:
         synthesis_input = texttospeech.SynthesisInput(text=x)
         # Perform the text-to-speech request on the text input with the selected
@@ -345,29 +348,39 @@ def create_mp3():
         response = client.synthesize_speech(
             input=synthesis_input, voice=voice, audio_config=audio_config
         )
+        # get path of mp3
         complete_name = (output_location + '/' + x.strip('\n').replace('/', '_').replace('?', '') + '.mp3')
-        fileList.append(complete_name)
-        # The response's audio_content is binary.
-        with open(complete_name, 'wb') as out:
+        fileList.append(complete_name)  # save filenames to list
+        with open(complete_name, 'wb') as out:  # write mp3s
             out.write(response.audio_content)
 
 
 def create_deck():
+    """Create an Anki deck with a card and a reverse card for each source/target word pair, with added mp3s"""
+
+    # define deck with random deck_id
     deck = genanki.Deck(
         random.randrange(1 << 30, 1 << 31),
         deck_name)
+
+    # define package which stores deck and anki files
     package = genanki.Package(deck)
-    i = 1
+
     for (source, target, name) in zip(sourceList, targetList, fileList):
-        package.media_files.append(name)
-        media = '[sound:' + name.replace(output_location + '/', '') + ']'
-        print(media)
+        package.media_files.append(name)  # add filenames of target TTS mp3s to package 'media_files' list
+        media = '[sound:' + name.replace(output_location + '/', '') + ']'  # strip path from filename
+
+        # create note according to model, with source & target words and filename for target TTS mp3
         note = genanki.Note(
             model=model,
             fields=[source, target, media]
         )
+
+        # add note to deck
         deck.add_note(note)
 
+    # TODO: add GUI option for letting the user choose to generate reverse cards
+    # repeat previous process with reverse versions of cards
     for (source, target, name) in zip(sourceList, targetList, fileList):
         media = '[sound:' + name.replace(output_location + '/', '') + ']'
         print(media)
@@ -380,10 +393,8 @@ def create_deck():
     package.write_to_file(output_location + '\\output.apkg')
 
 
+# loop for first, input type prompt, GUI popup
 while True:
-    # uncomment to test
-    # test()
-    # break
     event, values = window.read()
 
     if event == key_confirm:
