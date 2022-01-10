@@ -1,4 +1,5 @@
 # Lingogen
+_This project and its author are not affiliated/associated with the Anki or genanki in any way._
 
 Lingogen is a Python application for foreign language learners that creates [Anki](https://apps.ankiweb.net/) cards with audio pronunciations of words and phrases in the target language.
 
