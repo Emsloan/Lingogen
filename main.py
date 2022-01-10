@@ -4,7 +4,7 @@ import os.path
 import genanki
 import random
 
-languageList = ['English', 'Italian', 'German', 'Japanese']  # list of supported target language types
+languageList = ['English', 'Italian', 'German']  # list of supported target language types
 sourceList = list()  # holds words in source language
 targetList = list()  # holds words in target language
 fileList = list()  # holds filenames
