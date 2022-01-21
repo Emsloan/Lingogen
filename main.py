@@ -243,11 +243,11 @@ def main():
             output_location = values[key_output_field]
         if event == key_src_file_field:  # A file for the source words was provided
             src_file_location = values[key_src_file_field]  # read file path
-            file = open(src_file_location)  # open file
+            file = open(src_file_location, encoding='utf-8')  # open file
             sourceList = clean_list(file)  # save lines to list with blank lines removed
         if event == key_target_file_field:  # a file for the target words was provided
             target_file_location = values[key_target_file_field]  # read file path
-            file = open(target_file_location)  # open file
+            file = open(target_file_location, encoding='utf-8')  # open file
             targetList = clean_list(file)  # save lines to list with blank lines removed
         if event == key_add:  # the user pressed the 'add' button
             if values[key_src_txt_input] != "" and values[key_target_txt_input] != "":  # verify both boxes have values
@@ -257,10 +257,11 @@ def main():
                 simpleGUI.popup("Please add a word to both boxes.")  # display an error to the user
         if event == key_go:  # user chooses to generate deck
             if not is_error():  # call error handling method
-                window.close()
-                simpleGUI.popup("Deck generated!", title="Success")
+                simpleGUI.popup("Please do not close this window, your deck is being generated.", title="Generating Deck...")
                 create_mp3()
                 create_deck()
+                window.close()
+                simpleGUI.popup("Deck generated!", title="Success")
 
 
 def test():
@@ -325,7 +326,7 @@ def create_mp3():
         b.strip()
 
     # defining client for TTS
-    credential_path = "crucial-cycling-313504-148b7392f3ca.json"
+    credential_path = "crucial-cycling-313504-68e61ab8fbee.json"
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credential_path
     client = texttospeech.TextToSpeechClient()
 
@@ -365,9 +366,9 @@ def create_mp3():
         # get path of mp3
         complete_name = (output_location + '/' + x.strip('\n').replace('/', '_').replace('?', '') + '.mp3')
         fileList.append(complete_name)  # save filenames to list
+
         with open(complete_name, 'wb') as out:  # write mp3s
             out.write(response.audio_content)
-
 
 def create_deck():
     """Create an Anki deck with a card and a reverse card for each source/target word pair, with added mp3s"""
@@ -403,12 +404,15 @@ def create_deck():
         )
         deck.add_note(note)
 
-    package.write_to_file(output_location + '\\'+deck_name+'.apkg')
+    package.write_to_file(output_location + '\\' + deck_name + '.apkg')
+    for file in fileList:
+        os.remove(file)
 
 
 # loop for first, input type prompt, GUI popup
 while True:
     event, values = window.read()
+    window.close()
 
     if event == key_confirm:
         if values[key_file]:
