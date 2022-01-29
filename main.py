@@ -257,6 +257,7 @@ def main():
                 simpleGUI.popup("Please add a word to both boxes.")  # display an error to the user
         if event == key_go:  # user chooses to generate deck
             if not is_error():  # call error handling method
+                # TODO: popup blocks creation of deck, stop that
                 simpleGUI.popup("Please do not close this window, your deck is being generated.", title="Generating Deck...")
                 create_mp3()
                 create_deck()
