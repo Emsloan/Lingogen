@@ -414,7 +414,6 @@ def create_deck():
 while True:
     event, values = window.read()
     window.close()
-
     if event == key_confirm:
         if values[key_file]:
             input_type = "file"
